@@ -1,0 +1,6 @@
+{
+  "name": "GAME Academy Admin Panel",
+  "description": "A premium, responsive admin dashboard for managing GAME Academy site content, featuring site settings, courses, resources, and more.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

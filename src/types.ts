@@ -12,6 +12,10 @@ export interface SiteSettings {
   youtube: string;
   telegram: string;
   facebook: string;
+  linkedin: string;
+  whatsappChannel: string;
+  androidAppLink: string;
+  iosAppLink: string;
   address: string;
 }
 

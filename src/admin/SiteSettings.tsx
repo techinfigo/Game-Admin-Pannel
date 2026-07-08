@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Save, Globe, MessageCircle, Mail, Link as LinkIcon, Instagram, Youtube, Send, Facebook, MapPin } from 'lucide-react';
+import { Save, Globe, MessageCircle, Mail, Link as LinkIcon, Instagram, Youtube, Send, Facebook, MapPin, Linkedin, MessageSquare, Smartphone } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SiteSettings } from '../types';
 
@@ -18,6 +18,10 @@ export default function SiteSettingsPage() {
     youtube: 'https://youtube.com/@game_academy',
     telegram: 'https://t.me/game_academy',
     facebook: 'https://facebook.com/gameacademy',
+    linkedin: '',
+    whatsappChannel: '',
+    androidAppLink: '',
+    iosAppLink: '',
     address: '123, Tech Park, Hyderabad, India'
   });
 
@@ -155,6 +159,7 @@ export default function SiteSettingsPage() {
                   value={settings.instagram}
                   onChange={handleInputChange}
                   className="input-field pl-10" 
+                  placeholder="https://instagram.com/..."
                 />
                 <Instagram className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               </div>
@@ -169,6 +174,7 @@ export default function SiteSettingsPage() {
                   value={settings.youtube}
                   onChange={handleInputChange}
                   className="input-field pl-10" 
+                  placeholder="https://youtube.com/..."
                 />
                 <Youtube className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               </div>
@@ -183,6 +189,7 @@ export default function SiteSettingsPage() {
                   value={settings.telegram}
                   onChange={handleInputChange}
                   className="input-field pl-10" 
+                  placeholder="https://t.me/..."
                 />
                 <Send className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               </div>
@@ -197,8 +204,81 @@ export default function SiteSettingsPage() {
                   value={settings.facebook}
                   onChange={handleInputChange}
                   className="input-field pl-10" 
+                  placeholder="https://facebook.com/..."
                 />
                 <Facebook className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+
+            <div>
+              <label className="label-text">LinkedIn Page URL</label>
+              <div className="relative">
+                <input 
+                  type="url" 
+                  name="linkedin"
+                  value={settings.linkedin}
+                  onChange={handleInputChange}
+                  className="input-field pl-10" 
+                  placeholder="https://www.linkedin.com/company/gameacademyindia/"
+                />
+                <Linkedin className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+
+            <div>
+              <label className="label-text">WhatsApp Channel Link</label>
+              <div className="relative">
+                <input 
+                  type="url" 
+                  name="whatsappChannel"
+                  value={settings.whatsappChannel}
+                  onChange={handleInputChange}
+                  className="input-field pl-10" 
+                  placeholder="https://whatsapp.com/channel/..."
+                />
+                <MessageSquare className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* App Links Section */}
+        <section className="admin-card">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-game-teal/10 rounded-xl flex items-center justify-center text-game-teal">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-800">Mobile Applications</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="label-text">Android App Link (Play Store / Classplus)</label>
+              <div className="relative">
+                <input 
+                  type="url" 
+                  name="androidAppLink"
+                  value={settings.androidAppLink}
+                  onChange={handleInputChange}
+                  className="input-field pl-10" 
+                  placeholder="https://clppenny.page.link/..."
+                />
+                <Smartphone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+
+            <div>
+              <label className="label-text">iOS App Link (App Store)</label>
+              <div className="relative">
+                <input 
+                  type="url" 
+                  name="iosAppLink"
+                  value={settings.iosAppLink}
+                  onChange={handleInputChange}
+                  className="input-field pl-10" 
+                  placeholder="https://apps.apple.com/..."
+                />
+                <Smartphone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               </div>
             </div>
           </div>

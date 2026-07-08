@@ -64,23 +64,26 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-100 transition-transform duration-300 transform ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-slate-900 border-r border-slate-800 transition-transform duration-300 transform ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
             <Link to="/admin" className="flex items-center justify-center flex-1">
-              <div className="w-12 h-12 bg-game-teal rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-game-teal/20">
-                G
-              </div>
+              <img 
+                src="https://placehold.co/200x80/0d9488/ffffff?text=GAME+ACADEMY" 
+                alt="GAME Academy Logo" 
+                className="max-h-12 w-auto object-contain"
+                referrerPolicy="no-referrer"
+              />
             </Link>
             <button 
-              className="lg:hidden p-2 hover:bg-slate-50 rounded-lg"
+              className="lg:hidden p-2 hover:bg-white/5 rounded-lg"
               onClick={() => setIsSidebarOpen(false)}
             >
-              <X className="w-5 h-5 text-slate-500" />
+              <X className="w-5 h-5 text-slate-400" />
             </button>
           </div>
 
@@ -95,10 +98,10 @@ export default function AdminLayout() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                     isActive 
                       ? 'bg-game-teal text-white shadow-lg shadow-game-teal/20' 
-                      : 'text-slate-600 hover:bg-slate-50'
+                      : 'text-slate-400 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-game-teal'}`} />
+                  <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
                   <span className="font-medium">{item.label}</span>
                 </Link>
               );
@@ -106,8 +109,8 @@ export default function AdminLayout() {
           </nav>
 
           {/* Logout Section */}
-          <div className="p-4 border-t border-slate-50">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all duration-200">
+          <div className="p-4 border-t border-slate-800">
+            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all duration-200">
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Logout</span>
             </button>

@@ -23,6 +23,7 @@ import { Offer } from '../types';
 const initialOffers: Offer[] = [
   {
     id: '1',
+    badge: 'Limited-Time Power Deal',
     title: 'Monsoon Mega Sale',
     description: 'Flat 20% OFF on all GATE 2027 Batches. Limited time offer.',
     imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4638d9f8e?w=800&auto=format&fit=crop&q=60',
@@ -33,6 +34,7 @@ const initialOffers: Offer[] = [
   },
   {
     id: '2',
+    badge: 'Special Bonus',
     title: 'Early Bird SSC-JE',
     description: 'Join the new batch before July 10 and get FREE Test Series.',
     imageUrl: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=800&auto=format&fit=crop&q=60',
@@ -50,6 +52,7 @@ export default function Offers() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [formData, setFormData] = useState<Partial<Offer>>({
+    badge: '',
     title: '',
     description: '',
     imageUrl: '',
@@ -66,6 +69,7 @@ export default function Offers() {
     } else {
       setEditingOffer(null);
       setFormData({
+        badge: '',
         title: '',
         description: '',
         imageUrl: '',
@@ -157,7 +161,14 @@ export default function Offers() {
                 <div className="flex-1 flex flex-col justify-between py-1">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-bold text-xl text-slate-900">{offer.title}</h3>
+                      <div>
+                        {offer.badge && (
+                          <span className="inline-block px-2 py-0.5 bg-game-teal/10 text-game-teal text-[10px] font-bold rounded uppercase mb-1">
+                            {offer.badge}
+                          </span>
+                        )}
+                        <h3 className="font-bold text-xl text-slate-900">{offer.title}</h3>
+                      </div>
                       <button 
                         onClick={() => toggleStatus(offer.id)}
                         className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1 transition-colors ${
@@ -225,6 +236,15 @@ export default function Offers() {
 
               <form onSubmit={handleSubmit} className="p-6 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="md:col-span-2">
+                    <label className="label-text">Badge / Label</label>
+                    <input 
+                      type="text" 
+                      value={formData.badge}
+                      onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
+                      className="input-field" placeholder="e.g. Limited-Time Power Deal" required 
+                    />
+                  </div>
                   <div className="md:col-span-2">
                     <label className="label-text">Offer Title</label>
                     <input 

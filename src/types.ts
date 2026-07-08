@@ -70,6 +70,7 @@ export interface Course {
 
 export interface Offer {
   id: string;
+  badge: string;
   title: string;
   description: string;
   imageUrl: string;

@@ -15,7 +15,10 @@ import {
   GraduationCap,
   PlayCircle,
   ExternalLink,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Clock,
+  Eye,
+  Tag as TagIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { VideoLecture } from '../types';
@@ -23,17 +26,25 @@ import { VideoLecture } from '../types';
 const initialLectures: VideoLecture[] = [
   {
     id: '1',
-    title: 'GATE 2025: Engineering Mathematics Strategy',
-    examTag: 'GATE',
+    title: 'How to Crack GATE 2025',
+    subtitle: 'Proven Strategy by Gaurav Babu Sir',
+    tag: 'GATE Strategy',
+    duration: '14:15',
+    views: '245k',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    examTag: 'GATE',
     description: 'Learn the most important topics in Engineering Mathematics that carry high weightage in GATE.',
     thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg'
   },
   {
     id: '2',
-    title: 'SSC-JE Mechanical Engineering Live Session',
-    examTag: 'SSC-JE',
+    title: 'Basic Mechanics Intro',
+    subtitle: 'Concepts by Vikram Singh Sir',
+    tag: 'Basic Mechanics',
+    duration: '22:40',
+    views: '112k',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    examTag: 'SSC-JE',
     description: 'Live interactive session on Thermodynamics and Fluid Mechanics for SSC-JE aspirants.',
     thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg'
   }
@@ -47,6 +58,10 @@ export default function VideoLectures() {
 
   const [formData, setFormData] = useState<Partial<VideoLecture>>({
     title: '',
+    subtitle: '',
+    tag: '',
+    duration: '',
+    views: '',
     examTag: '',
     youtubeUrl: '',
     description: '',
@@ -61,6 +76,10 @@ export default function VideoLectures() {
       setEditingLecture(null);
       setFormData({
         title: '',
+        subtitle: '',
+        tag: '',
+        duration: '',
+        views: '',
         examTag: '',
         youtubeUrl: '',
         description: '',
@@ -146,22 +165,41 @@ export default function VideoLectures() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <PlayCircle className="w-16 h-16 text-white opacity-60 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="absolute top-4 left-4">
+                <div className="absolute top-4 left-4 flex flex-col gap-2">
                   <span className="px-3 py-1 bg-game-teal text-white text-[10px] font-bold uppercase rounded-lg shadow-lg flex items-center gap-2">
-                    <GraduationCap className="w-3 h-3" />
-                    {lecture.examTag}
+                    <TagIcon className="w-3 h-3" />
+                    {lecture.tag}
                   </span>
+                  {lecture.examTag && (
+                    <span className="px-3 py-1 bg-white text-slate-900 text-[10px] font-bold uppercase rounded-lg shadow-lg flex items-center gap-2">
+                      <GraduationCap className="w-3 h-3" />
+                      {lecture.examTag}
+                    </span>
+                  )}
+                </div>
+                <div className="absolute bottom-4 right-4 flex items-center gap-3">
+                  <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" />
+                    {lecture.duration}
+                  </div>
+                  <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1.5">
+                    <Eye className="w-3 h-3" />
+                    {lecture.views}
+                  </div>
                 </div>
               </div>
 
               <div className="p-6 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-lg line-clamp-1 mb-2 group-hover:text-game-teal transition-colors">
+                  <h3 className="font-bold text-slate-900 text-lg line-clamp-1 mb-1 group-hover:text-game-teal transition-colors">
                     {lecture.title}
                   </h3>
-                  <p className="text-slate-500 text-sm line-clamp-2 mb-4 leading-relaxed">
-                    {lecture.description}
-                  </p>
+                  <p className="text-xs text-game-teal font-bold mb-3 line-clamp-1 opacity-80">{lecture.subtitle}</p>
+                  {lecture.description && (
+                    <p className="text-slate-500 text-sm line-clamp-2 mb-4 leading-relaxed">
+                      {lecture.description}
+                    </p>
+                  )}
                   <a 
                     href={lecture.youtubeUrl} 
                     target="_blank" 
@@ -211,41 +249,75 @@ export default function VideoLectures() {
                 <button onClick={handleCloseModal} className="p-2 hover:bg-slate-100 rounded-xl transition-colors"><X className="w-5 h-5 text-slate-500" /></button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                <div className="space-y-4">
-                  <div>
+              <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="md:col-span-2">
                     <label className="label-text">Video Title</label>
                     <input 
                       type="text" 
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="input-field" placeholder="Descriptive title of the lecture" required 
+                      className="input-field" placeholder="e.g. How to Crack GATE 2025" required 
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="label-text">Exam Category</label>
-                      <input 
-                        type="text" 
-                        value={formData.examTag}
-                        onChange={(e) => setFormData({ ...formData, examTag: e.target.value })}
-                        className="input-field" placeholder="e.g. GATE" required 
-                      />
-                    </div>
-                    <div>
-                      <label className="label-text">YouTube URL</label>
-                      <div className="relative">
-                        <input 
-                          type="url" 
-                          value={formData.youtubeUrl}
-                          onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
-                          className="input-field pl-10" placeholder="https://youtube..." required 
-                        />
-                        <Youtube className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      </div>
-                    </div>
+                  <div className="md:col-span-2">
+                    <label className="label-text">Subtitle / Author Line</label>
+                    <input 
+                      type="text" 
+                      value={formData.subtitle}
+                      onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                      className="input-field" placeholder="e.g. Proven Strategy by Gaurav Babu Sir" required 
+                    />
                   </div>
                   <div>
+                    <label className="label-text">Topic Label / Tag</label>
+                    <input 
+                      type="text" 
+                      value={formData.tag}
+                      onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
+                      className="input-field" placeholder="e.g. GATE Strategy" required 
+                    />
+                  </div>
+                  <div>
+                    <label className="label-text">Exam Category (Optional)</label>
+                    <input 
+                      type="text" 
+                      value={formData.examTag}
+                      onChange={(e) => setFormData({ ...formData, examTag: e.target.value })}
+                      className="input-field" placeholder="e.g. GATE" 
+                    />
+                  </div>
+                  <div>
+                    <label className="label-text">Duration</label>
+                    <input 
+                      type="text" 
+                      value={formData.duration}
+                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                      className="input-field" placeholder="e.g. 14:15" required 
+                    />
+                  </div>
+                  <div>
+                    <label className="label-text">Views Count</label>
+                    <input 
+                      type="text" 
+                      value={formData.views}
+                      onChange={(e) => setFormData({ ...formData, views: e.target.value })}
+                      className="input-field" placeholder="e.g. 245k" required 
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="label-text">YouTube URL</label>
+                    <div className="relative">
+                      <input 
+                        type="url" 
+                        value={formData.youtubeUrl}
+                        onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                        className="input-field pl-10" placeholder="https://youtube..." required 
+                      />
+                      <Youtube className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
                     <label className="label-text">Thumbnail URL (Optional)</label>
                     <div className="relative">
                       <input 
@@ -258,17 +330,17 @@ export default function VideoLectures() {
                     </div>
                     <p className="text-[10px] text-slate-400 mt-1">If left blank, YouTube auto-thumbnail will be used.</p>
                   </div>
-                  <div>
-                    <label className="label-text">Description</label>
+                  <div className="md:col-span-2">
+                    <label className="label-text">Description (Optional)</label>
                     <textarea 
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="input-field min-h-[100px]" placeholder="What will students learn in this video?" required 
+                      className="input-field min-h-[80px]" placeholder="Briefly describe the video content..." 
                     />
                   </div>
                 </div>
 
-                <div className="pt-4 flex gap-3">
+                <div className="pt-4 flex gap-3 sticky bottom-0 bg-white pb-2">
                   <button type="button" onClick={handleCloseModal} className="btn-secondary flex-1 justify-center">Cancel</button>
                   <button type="submit" className="btn-primary flex-1 justify-center">
                     {editingLecture ? 'Update Video' : 'Add to List'}

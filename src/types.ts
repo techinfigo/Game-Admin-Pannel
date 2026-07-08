@@ -154,10 +154,14 @@ export interface Faculty {
 export interface VideoLecture {
   id: string;
   title: string;
-  examTag: string;
+  subtitle: string;       // e.g. "Proven Strategy by Gaurav Babu Sir"
+  tag: string;            // topic label, e.g. "GATE Strategy", "Basic Mechanics"
+  duration: string;       // e.g. "14:15"
+  views: string;          // e.g. "245k"
   youtubeUrl: string;
-  description: string;
-  thumbnailUrl?: string;
+  thumbnailUrl?: string;  // optional
+  examTag?: string;       // optional
+  description?: string;   // optional
 }
 
 export interface HeroSlide {

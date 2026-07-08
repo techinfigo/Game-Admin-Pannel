@@ -124,13 +124,17 @@ export interface BlogPost {
   id: string;
   title: string;
   slug: string;
+  category: string;       // e.g. "Strategy", "Technical", "Career"
+  author: string;
+  authorRole: string;     // e.g. "Founder & Mentor", "Senior Faculty"
+  readTime: string;       // e.g. "8 min read"
   coverImageUrl: string;
   excerpt: string;
   content: string;
-  author: string;
   publishedDate: string;
   tags: string[];
   published: boolean;
+  featured: boolean;      // highlight this post at the top
 }
 
 export interface Faculty {

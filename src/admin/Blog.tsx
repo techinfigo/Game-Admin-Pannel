@@ -26,25 +26,33 @@ const initialPosts: BlogPost[] = [
     id: '1',
     title: 'How to Crack GATE in 6 Months',
     slug: 'how-to-crack-gate-in-6-months',
+    category: 'Strategy',
     coverImageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=60',
     excerpt: 'A comprehensive guide for engineering students to prepare for GATE 2025 with a 6-month roadmap.',
     content: 'Long content would go here...',
     author: 'Admin',
+    authorRole: 'Founder & Mentor',
+    readTime: '8 min read',
     publishedDate: '2026-07-01',
     tags: ['GATE', 'Preparation', 'Roadmap'],
-    published: true
+    published: true,
+    featured: true
   },
   {
     id: '2',
     title: 'Top 10 PSU Recruitments through SSC-JE',
     slug: 'top-10-psu-ssc-je',
+    category: 'Career',
     coverImageUrl: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=60',
     excerpt: 'Explore the best Public Sector Undertakings you can join after qualifying SSC-JE exam.',
     content: 'Long content would go here...',
     author: 'GAME Faculty',
+    authorRole: 'Senior Faculty',
+    readTime: '5 min read',
     publishedDate: '2026-06-25',
     tags: ['SSC-JE', 'Jobs', 'PSU'],
-    published: false
+    published: false,
+    featured: false
   }
 ];
 
@@ -57,13 +65,17 @@ export default function Blog() {
   const [formData, setFormData] = useState<Partial<BlogPost>>({
     title: '',
     slug: '',
+    category: 'Strategy',
     coverImageUrl: '',
     excerpt: '',
     content: '',
     author: 'Admin',
+    authorRole: 'Founder & Mentor',
+    readTime: '5 min read',
     publishedDate: new Date().toISOString().split('T')[0],
     tags: [],
-    published: true
+    published: true,
+    featured: false
   });
 
   const [tagInput, setTagInput] = useState('');
@@ -77,13 +89,17 @@ export default function Blog() {
       setFormData({
         title: '',
         slug: '',
+        category: 'Strategy',
         coverImageUrl: '',
         excerpt: '',
         content: '',
         author: 'Admin',
+        authorRole: 'Founder & Mentor',
+        readTime: '5 min read',
         publishedDate: new Date().toISOString().split('T')[0],
         tags: [],
-        published: true
+        published: true,
+        featured: false
       });
     }
     setIsModalOpen(true);
@@ -177,18 +193,29 @@ export default function Blog() {
             >
               <div className="w-full sm:w-48 h-48 sm:h-auto shrink-0 relative overflow-hidden">
                 <img src={post.coverImageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute top-3 left-3">
+                <div className="absolute top-3 left-3 flex flex-col gap-2">
                   <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1 shadow-sm ${
                     post.published ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'
                   }`}>
                     {post.published ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                     {post.published ? 'Live' : 'Draft'}
                   </span>
+                  {post.featured && (
+                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase bg-game-gold text-white shadow-sm flex items-center gap-1">
+                      <Plus className="w-3 h-3 rotate-45" /> Featured
+                    </span>
+                  )}
                 </div>
               </div>
 
               <div className="p-5 flex-1 flex flex-col justify-between">
                 <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-bold text-game-teal bg-game-teal/10 px-2 py-0.5 rounded uppercase">{post.category}</span>
+                    <span className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {post.readTime}
+                    </span>
+                  </div>
                   <h3 className="font-bold text-lg text-slate-900 line-clamp-2 mb-2 group-hover:text-game-teal transition-colors">
                     {post.title}
                   </h3>
@@ -264,6 +291,35 @@ export default function Blog() {
                       className="input-field" placeholder="Catchy title for the blog post" required 
                     />
                   </div>
+                  <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div>
+                      <label className="label-text">Category</label>
+                      <input 
+                        type="text" 
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="input-field" placeholder="e.g. Strategy" required 
+                      />
+                    </div>
+                    <div>
+                      <label className="label-text">Read Time</label>
+                      <input 
+                        type="text" 
+                        value={formData.readTime}
+                        onChange={(e) => setFormData({ ...formData, readTime: e.target.value })}
+                        className="input-field" placeholder="e.g. 5 min read" required 
+                      />
+                    </div>
+                    <div>
+                      <label className="label-text">Publish Date</label>
+                      <input 
+                        type="date" 
+                        value={formData.publishedDate}
+                        onChange={(e) => setFormData({ ...formData, publishedDate: e.target.value })}
+                        className="input-field" required 
+                      />
+                    </div>
+                  </div>
                   <div className="md:col-span-2">
                     <label className="label-text">Short Excerpt</label>
                     <textarea 
@@ -302,12 +358,12 @@ export default function Blog() {
                     />
                   </div>
                   <div>
-                    <label className="label-text">Publish Date</label>
+                    <label className="label-text">Author Role</label>
                     <input 
-                      type="date" 
-                      value={formData.publishedDate}
-                      onChange={(e) => setFormData({ ...formData, publishedDate: e.target.value })}
-                      className="input-field" required 
+                      type="text" 
+                      value={formData.authorRole}
+                      onChange={(e) => setFormData({ ...formData, authorRole: e.target.value })}
+                      className="input-field" placeholder="e.g. Founder & Mentor" required 
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -330,7 +386,7 @@ export default function Blog() {
                       </div>
                     </div>
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 flex flex-col sm:flex-row gap-6">
                     <label className="flex items-center gap-3 cursor-pointer group">
                       <div className="relative">
                         <input 
@@ -343,6 +399,20 @@ export default function Blog() {
                         <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.published ? 'translate-x-6' : 'translate-x-0'}`}></div>
                       </div>
                       <span className="font-bold text-slate-700">Publish Immediately</span>
+                    </label>
+
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative">
+                        <input 
+                          type="checkbox" 
+                          checked={formData.featured}
+                          onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                          className="sr-only" 
+                        />
+                        <div className={`w-12 h-6 rounded-full transition-colors ${formData.featured ? 'bg-game-gold' : 'bg-slate-200'}`}></div>
+                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.featured ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                      </div>
+                      <span className="font-bold text-slate-700">Featured Article</span>
                     </label>
                   </div>
                 </div>

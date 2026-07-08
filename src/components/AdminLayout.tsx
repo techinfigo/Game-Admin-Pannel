@@ -71,11 +71,11 @@ export default function AdminLayout() {
         <div className="flex flex-col h-full">
           {/* Logo Section */}
           <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-            <Link to="/admin" className="flex items-center justify-center flex-1">
+            <Link to="/admin" className="flex items-center justify-center flex-1 px-4">
               <img 
-                src="https://placehold.co/200x80/0d9488/ffffff?text=GAME+ACADEMY" 
+                src="/src/assets/images/game_academy_logo_1783498289580.jpg" 
                 alt="GAME Academy Logo" 
-                className="max-h-12 w-auto object-contain"
+                className="max-h-16 w-auto object-contain rounded-lg"
                 referrerPolicy="no-referrer"
               />
             </Link>

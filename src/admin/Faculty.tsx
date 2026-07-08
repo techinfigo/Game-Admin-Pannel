@@ -23,21 +23,36 @@ import { Faculty } from '../types';
 const initialFaculty: Faculty[] = [
   {
     id: '1',
-    name: 'Dr. Vikram Singh',
-    subject: 'Structural Engineering',
-    qualification: 'M.Tech, Ph.D. (IIT Delhi)',
-    photoUrl: 'https://i.pravatar.cc/150?u=vikram',
-    bio: 'Specialist in concrete structures and earthquake engineering with over 15 years of academic and industrial experience.',
-    experienceYears: 15
+    name: 'Gaurav Babu Sir',
+    role: 'Founder & Chief Mentor',
+    expLabel: '14+ YRS EXP.',
+    experience: '14+ Years of Teaching Experience',
+    photoUrl: 'https://i.ibb.co/vzB7pLq/gaurav-babu.png',
+    stats: [
+      'Mentored 50,000+ students',
+      'ESE AIR 63',
+      'Ex-Faculty, Made Easy'
+    ],
+    isChiefMentor: true,
+    subject: 'Thermal & Manufacturing',
+    qualification: 'M.Tech (IIT Delhi)',
+    bio: 'Visionary educator and mentor for thousands of GATE/ESE aspirants across India.'
   },
   {
     id: '2',
-    name: 'Er. Anjali Sharma',
-    subject: 'Engineering Mathematics',
-    qualification: 'M.Sc. Mathematics, GATE Qualified',
-    photoUrl: 'https://i.pravatar.cc/150?u=anjali',
-    bio: 'Renowned for making complex mathematical concepts simple for GATE aspirants. Helped 1000+ students secure top ranks.',
-    experienceYears: 8
+    name: 'Vikram Singh',
+    role: 'Structural Engineering Expert',
+    expLabel: '10+ YRS EXP.',
+    experience: '10+ Years of Academic Excellence',
+    photoUrl: 'https://i.pravatar.cc/150?u=vikram',
+    stats: [
+      'Authored 3 Engineering Books',
+      'Consultant for Smart City Projects'
+    ],
+    isChiefMentor: false,
+    subject: 'Civil Engineering',
+    qualification: 'Ph.D. (IIT Roorkee)',
+    bio: 'Specialist in concrete structures and earthquake engineering.'
   }
 ];
 
@@ -46,14 +61,19 @@ export default function FacultyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statInput, setStatInput] = useState('');
 
   const [formData, setFormData] = useState<Partial<Faculty>>({
     name: '',
+    role: '',
+    expLabel: '',
+    experience: '',
+    photoUrl: '',
+    stats: [],
+    isChiefMentor: false,
     subject: '',
     qualification: '',
-    photoUrl: '',
-    bio: '',
-    experienceYears: 0
+    bio: ''
   });
 
   const handleOpenModal = (member?: Faculty) => {
@@ -64,13 +84,19 @@ export default function FacultyPage() {
       setEditingFaculty(null);
       setFormData({
         name: '',
+        role: '',
+        expLabel: '',
+        experience: '',
+        photoUrl: '',
+        stats: [],
+        isChiefMentor: false,
         subject: '',
         qualification: '',
-        photoUrl: '',
-        bio: '',
-        experienceYears: 0
+        bio: ''
       });
     }
+    setIsModalOpen(statInput === ''); // Reset stat input indirectly
+    setStatInput('');
     setIsModalOpen(true);
   };
 
@@ -79,13 +105,28 @@ export default function FacultyPage() {
     setEditingFaculty(null);
   };
 
+  const handleAddStat = () => {
+    if (statInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        stats: [...(prev.stats || []), statInput.trim()]
+      }));
+      setStatInput('');
+    }
+  };
+
+  const handleRemoveStat = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      stats: (prev.stats || []).filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingFaculty) {
-      // TODO: connect to Firestore
       setFaculty(prev => prev.map(f => f.id === editingFaculty.id ? { ...f, ...formData } as Faculty : f));
     } else {
-      // TODO: connect to Firestore
       const newMember = {
         ...formData,
         id: Math.random().toString(36).substr(2, 9)
@@ -97,14 +138,13 @@ export default function FacultyPage() {
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this faculty member?')) {
-      // TODO: connect to Firestore
       setFaculty(prev => prev.filter(f => f.id !== id));
     }
   };
 
   const filteredFaculty = faculty.filter(f => 
     f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.subject.toLowerCase().includes(searchTerm.toLowerCase())
+    (f.role && f.role.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -125,7 +165,7 @@ export default function FacultyPage() {
           <div className="relative flex-1">
             <input 
               type="text" 
-              placeholder="Search by name or subject..." 
+              placeholder="Search by name or role..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-11"
@@ -141,6 +181,15 @@ export default function FacultyPage() {
               layout
               className="group admin-card p-0 overflow-hidden hover:border-game-teal transition-all duration-300 relative"
             >
+              {member.isChiefMentor && (
+                <div className="absolute top-0 right-0 z-10">
+                  <div className="bg-game-gold text-white text-[10px] font-bold px-3 py-1.5 rounded-bl-xl shadow-lg flex items-center gap-1.5 uppercase">
+                    <Award className="w-3.5 h-3.5" />
+                    Chief Mentor
+                  </div>
+                </div>
+              )}
+              
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border-2 border-white shadow-lg">
@@ -152,25 +201,36 @@ export default function FacultyPage() {
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900 text-lg leading-tight">{member.name}</h3>
-                    <div className="flex items-center gap-1.5 text-game-teal font-bold text-xs uppercase mt-1">
-                      <BookOpen className="w-3 h-3" />
-                      {member.subject}
+                    <h3 className="font-bold text-slate-900 text-lg leading-tight line-clamp-1">{member.name}</h3>
+                    <div className="text-game-teal font-bold text-xs uppercase mt-1 line-clamp-1">
+                      {member.role}
                     </div>
+                    {member.expLabel && (
+                      <span className="inline-block mt-1.5 px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-bold rounded uppercase">
+                        {member.expLabel}
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <GraduationCap className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium">{member.qualification}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
                     <Briefcase className="w-4 h-4 text-slate-400" />
-                    <span>{member.experienceYears}+ Years Experience</span>
+                    <span className="font-medium line-clamp-1">{member.experience}</span>
                   </div>
-                  <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 bg-slate-50 p-3 rounded-xl">
-                    {member.bio}
+                  
+                  {member.stats && member.stats.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {member.stats.map((stat, i) => (
+                        <span key={i} className="px-2 py-0.5 bg-game-teal/5 text-game-teal text-[9px] font-bold rounded-lg border border-game-teal/10">
+                          {stat}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-slate-500 text-sm leading-relaxed line-clamp-2 bg-slate-50 p-3 rounded-xl italic">
+                    "{member.bio}"
                   </p>
                 </div>
 
@@ -204,77 +264,168 @@ export default function FacultyPage() {
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative z-10 max-h-[90vh] flex flex-col"
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden relative z-10 max-h-[90vh] flex flex-col"
             >
               <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
-                <h2 className="text-xl font-bold text-slate-900">{editingFaculty ? 'Edit Faculty member' : 'Add New Faculty'}</h2>
+                <h2 className="text-xl font-bold text-slate-900">{editingFaculty ? 'Edit Faculty profile' : 'Add New Faculty'}</h2>
                 <button onClick={handleCloseModal} className="p-2 hover:bg-slate-100 rounded-xl transition-colors"><X className="w-5 h-5 text-slate-500" /></button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="sm:col-span-2">
-                    <label className="label-text">Full Name</label>
-                    <input 
-                      type="text" 
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="input-field" placeholder="Full name of the educator" required 
-                    />
-                  </div>
-                  <div>
-                    <label className="label-text">Subject Specialization</label>
-                    <input 
-                      type="text" 
-                      value={formData.subject}
-                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="input-field" placeholder="e.g. Mathematics" required 
-                    />
-                  </div>
-                  <div>
-                    <label className="label-text">Years of Experience</label>
-                    <input 
-                      type="number" 
-                      value={formData.experienceYears}
-                      onChange={(e) => setFormData({ ...formData, experienceYears: Number(e.target.value) })}
-                      className="input-field" min="0" required 
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="label-text">Qualifications</label>
-                    <input 
-                      type="text" 
-                      value={formData.qualification}
-                      onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-                      className="input-field" placeholder="e.g. M.Tech, Ph.D." required 
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="label-text">Profile Photo URL</label>
-                    <div className="relative">
-                      <input 
-                        type="url" 
-                        value={formData.photoUrl}
-                        onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                        className="input-field pl-10" placeholder="https://..." required 
-                      />
-                      <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Basic Info */}
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
+                      <User className="w-4 h-4" />
+                      Basic Profile
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="label-text">Full Name</label>
+                        <input 
+                          type="text" 
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="input-field" placeholder="e.g. Gaurav Babu Sir" required 
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="label-text">Role / Title</label>
+                        <input 
+                          type="text" 
+                          value={formData.role}
+                          onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                          className="input-field" placeholder="e.g. Founder & Chief Mentor" required 
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="label-text">Profile Photo URL</label>
+                        <input 
+                          type="url" 
+                          value={formData.photoUrl}
+                          onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
+                          className="input-field" placeholder="https://..." required 
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="sm:col-span-2">
-                    <label className="label-text">Short Bio / Achievements</label>
-                    <textarea 
-                      value={formData.bio}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                      className="input-field min-h-[100px]" placeholder="Brief professional summary..." required 
-                    />
+
+                  {/* Experience */}
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
+                      <Briefcase className="w-4 h-4" />
+                      Experience Details
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="label-text">Exp. Badge</label>
+                        <input 
+                          type="text" 
+                          value={formData.expLabel}
+                          onChange={(e) => setFormData({ ...formData, expLabel: e.target.value })}
+                          className="input-field" placeholder="e.g. 14+ YRS EXP." required 
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="label-text">Experience Text</label>
+                        <input 
+                          type="text" 
+                          value={formData.experience}
+                          onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                          className="input-field" placeholder="e.g. 14+ Years of Teaching Experience" required 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats / Achievements */}
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
+                      <Award className="w-4 h-4" />
+                      Achievement Points
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          value={statInput}
+                          onChange={(e) => setStatInput(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddStat())}
+                          className="input-field" 
+                          placeholder="Add an achievement point..." 
+                        />
+                        <button type="button" onClick={handleAddStat} className="btn-secondary px-4">Add</button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.stats?.map((stat, i) => (
+                          <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl text-sm font-medium text-slate-700">
+                            {stat}
+                            <button type="button" onClick={() => handleRemoveStat(i)} className="text-slate-400 hover:text-red-500">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mentor Toggle */}
+                  <div className="md:col-span-2 pt-2">
+                    <label className="flex items-center gap-3 cursor-pointer group w-fit">
+                      <div className="relative">
+                        <input 
+                          type="checkbox" 
+                          checked={formData.isChiefMentor}
+                          onChange={(e) => setFormData({ ...formData, isChiefMentor: e.target.checked })}
+                          className="sr-only" 
+                        />
+                        <div className={`w-12 h-6 rounded-full transition-colors ${formData.isChiefMentor ? 'bg-game-gold' : 'bg-slate-200'}`}></div>
+                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.isChiefMentor ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                      </div>
+                      <span className="font-bold text-slate-700">Mark as Chief Mentor</span>
+                    </label>
+                  </div>
+
+                  {/* Optional Extra Info */}
+                  <div className="md:col-span-2 space-y-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                      Optional Information
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="label-text text-slate-400">Subject</label>
+                        <input 
+                          type="text" 
+                          value={formData.subject}
+                          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                          className="input-field bg-slate-50/50" placeholder="e.g. Thermal Science" 
+                        />
+                      </div>
+                      <div>
+                        <label className="label-text text-slate-400">Qualification</label>
+                        <input 
+                          type="text" 
+                          value={formData.qualification}
+                          onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+                          className="input-field bg-slate-50/50" placeholder="e.g. M.Tech (IIT Delhi)" 
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="label-text text-slate-400">Short Bio</label>
+                        <textarea 
+                          value={formData.bio}
+                          onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                          className="input-field bg-slate-50/50 min-h-[80px]" placeholder="Brief professional summary..." 
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 <div className="pt-6 flex gap-3 sticky bottom-0 bg-white pb-2">
                   <button type="button" onClick={handleCloseModal} className="btn-secondary flex-1 justify-center">Cancel</button>
                   <button type="submit" className="btn-primary flex-1 justify-center">
-                    {editingFaculty ? 'Save Profile' : 'Add Faculty'}
+                    {editingFaculty ? 'Save Changes' : 'Add Faculty'}
                   </button>
                 </div>
               </form>

@@ -140,11 +140,15 @@ export interface BlogPost {
 export interface Faculty {
   id: string;
   name: string;
-  subject: string;
-  qualification: string;
+  role: string;           // e.g. "Founder & Chief Mentor", "Thermal Science Expert"
+  expLabel: string;       // short badge, e.g. "14+ YRS EXP."
+  experience: string;     // full text, e.g. "10+ Years of Teaching Experience"
   photoUrl: string;
-  bio: string;
-  experienceYears: number;
+  stats: string[];        // achievement points, e.g. ["Mentored 50,000+ students", "ESE AIR 63"]
+  isChiefMentor: boolean;
+  subject?: string;
+  qualification?: string;
+  bio?: string;
 }
 
 export interface VideoLecture {

@@ -13,7 +13,8 @@ import {
   X, 
   User,
   GraduationCap,
-  Calendar
+  Calendar,
+  Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Review } from '../types';
@@ -22,7 +23,10 @@ const initialReviews: Review[] = [
   {
     id: '1',
     studentName: 'Amit Verma',
-    exam: 'GATE 2024 (EE)',
+    rank: 'AIR-12 (GATE ME)',
+    exam: 'GATE 2024',
+    course: 'Lakshya | 1 Yr GATE Course',
+    branch: 'Mechanical',
     rating: 5,
     reviewText: 'The conceptual clarity provided by GAME Academy is unmatched. Highly recommended for all engineering students.',
     photoUrl: 'https://i.pravatar.cc/150?u=amit',
@@ -31,8 +35,11 @@ const initialReviews: Review[] = [
   {
     id: '2',
     studentName: 'Sneha Kapur',
+    rank: 'Selected - CPWD',
     exam: 'SSC-JE 2023',
-    rating: 4,
+    course: 'Victory Batch | SSC-JE',
+    branch: 'Civil',
+    rating: 5,
     reviewText: 'Excellent faculty and study material. The test series was very similar to the actual exam pattern.',
     photoUrl: 'https://i.pravatar.cc/150?u=sneha',
     date: '2026-05-20'
@@ -47,7 +54,10 @@ export default function Reviews() {
 
   const [formData, setFormData] = useState<Partial<Review>>({
     studentName: '',
+    rank: '',
     exam: '',
+    course: '',
+    branch: '',
     rating: 5,
     reviewText: '',
     photoUrl: '',
@@ -62,7 +72,10 @@ export default function Reviews() {
       setEditingReview(null);
       setFormData({
         studentName: '',
+        rank: '',
         exam: '',
+        course: '',
+        branch: '',
         rating: 5,
         reviewText: '',
         photoUrl: '',
@@ -102,7 +115,9 @@ export default function Reviews() {
 
   const filteredReviews = reviews.filter(r => 
     r.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.exam.toLowerCase().includes(searchTerm.toLowerCase())
+    r.exam.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.rank.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.course.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -151,8 +166,9 @@ export default function Reviews() {
                       />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">{review.studentName}</h3>
-                      <div className="flex items-center gap-1">
+                      <h3 className="font-bold text-slate-900 line-clamp-1">{review.studentName}</h3>
+                      <p className="text-[10px] font-bold text-game-teal uppercase tracking-tight line-clamp-1">{review.rank}</p>
+                      <div className="flex items-center gap-1 mt-1">
                         {[...Array(5)].map((_, i) => (
                           <Star 
                             key={i} 
@@ -171,9 +187,19 @@ export default function Reviews() {
                 </div>
 
                 <div className="space-y-2 mb-6">
-                  <div className="flex items-center gap-2 text-xs font-bold text-game-teal">
-                    <GraduationCap className="w-3.5 h-3.5" />
-                    {review.exam}
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase">
+                      <GraduationCap className="w-3.5 h-3.5 text-game-teal" />
+                      {review.exam}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase">
+                      <div className="w-1 h-1 rounded-full bg-slate-300" />
+                      {review.course}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase">
+                      <div className="w-1 h-1 rounded-full bg-slate-300" />
+                      {review.branch}
+                    </div>
                   </div>
                   <p className="text-slate-600 text-sm leading-relaxed line-clamp-3">"{review.reviewText}"</p>
                 </div>
@@ -221,41 +247,110 @@ export default function Reviews() {
                 <button onClick={handleCloseModal} className="p-2 hover:bg-slate-100 rounded-xl transition-colors"><X className="w-5 h-5 text-slate-500" /></button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="sm:col-span-2">
-                    <label className="label-text">Student Name</label>
-                    <input 
-                      type="text" 
-                      value={formData.studentName}
-                      onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
-                      className="input-field" placeholder="Full name of the student" required 
-                    />
+              <form onSubmit={handleSubmit} className="p-6 space-y-8 overflow-y-auto max-h-[75vh]">
+                {/* Student Info */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
+                    <User className="w-4 h-4" />
+                    Student Information
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                      <label className="label-text">Student Name</label>
+                      <input 
+                        type="text" 
+                        value={formData.studentName}
+                        onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
+                        className="input-field" placeholder="Full name of the student" required 
+                      />
+                    </div>
+                    <div>
+                      <label className="label-text">Rank / Status</label>
+                      <input 
+                        type="text" 
+                        value={formData.rank}
+                        onChange={(e) => setFormData({ ...formData, rank: e.target.value })}
+                        className="input-field" placeholder="e.g. AIR-1 (GATE ME)" required 
+                      />
+                    </div>
+                    <div>
+                      <label className="label-text">Exam Title</label>
+                      <input 
+                        type="text" 
+                        value={formData.exam}
+                        onChange={(e) => setFormData({ ...formData, exam: e.target.value })}
+                        className="input-field" placeholder="e.g. GATE 2024" required 
+                      />
+                    </div>
+                    <div>
+                      <label className="label-text">Course Name</label>
+                      <input 
+                        type="text" 
+                        value={formData.course}
+                        onChange={(e) => setFormData({ ...formData, course: e.target.value })}
+                        className="input-field" placeholder="e.g. Lakshya Course" required 
+                      />
+                    </div>
+                    <div>
+                      <label className="label-text">Branch</label>
+                      <input 
+                        type="text" 
+                        value={formData.branch}
+                        onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                        className="input-field" placeholder="e.g. Mechanical" required 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Review Content */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
+                    <Star className="w-4 h-4" />
+                    Review & Rating
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="label-text">Rating (1-5)</label>
+                      <select 
+                        value={formData.rating}
+                        onChange={(e) => setFormData({ ...formData, rating: Number(e.target.value) })}
+                        className="input-field"
+                      >
+                        <option value={5}>5 Stars</option>
+                        <option value={4}>4 Stars</option>
+                        <option value={3}>3 Stars</option>
+                        <option value={2}>2 Stars</option>
+                        <option value={1}>1 Star</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label-text">Date</label>
+                      <input 
+                        type="date" 
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        className="input-field" required 
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="label-text">Review Content</label>
+                      <textarea 
+                        value={formData.reviewText}
+                        onChange={(e) => setFormData({ ...formData, reviewText: e.target.value })}
+                        className="input-field min-h-[100px]" placeholder="Student's feedback..." required 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Photo */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
+                    <ImageIcon className="w-4 h-4" />
+                    Student Photo
                   </div>
                   <div>
-                    <label className="label-text">Exam Title</label>
-                    <input 
-                      type="text" 
-                      value={formData.exam}
-                      onChange={(e) => setFormData({ ...formData, exam: e.target.value })}
-                      className="input-field" placeholder="e.g. GATE 2024" required 
-                    />
-                  </div>
-                  <div>
-                    <label className="label-text">Rating (1-5)</label>
-                    <select 
-                      value={formData.rating}
-                      onChange={(e) => setFormData({ ...formData, rating: Number(e.target.value) })}
-                      className="input-field"
-                    >
-                      <option value={5}>5 Stars</option>
-                      <option value={4}>4 Stars</option>
-                      <option value={3}>3 Stars</option>
-                      <option value={2}>2 Stars</option>
-                      <option value={1}>1 Star</option>
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2">
                     <label className="label-text">Photo URL (Optional)</label>
                     <div className="relative">
                       <input 
@@ -267,26 +362,9 @@ export default function Reviews() {
                       <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     </div>
                   </div>
-                  <div className="sm:col-span-2">
-                    <label className="label-text">Review Content</label>
-                    <textarea 
-                      value={formData.reviewText}
-                      onChange={(e) => setFormData({ ...formData, reviewText: e.target.value })}
-                      className="input-field min-h-[100px]" placeholder="Student's feedback..." required 
-                    />
-                  </div>
-                  <div>
-                    <label className="label-text">Date</label>
-                    <input 
-                      type="date" 
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="input-field" required 
-                    />
-                  </div>
                 </div>
 
-                <div className="pt-4 flex gap-3">
+                <div className="pt-4 flex gap-3 sticky bottom-0 bg-white pb-2">
                   <button type="button" onClick={handleCloseModal} className="btn-secondary flex-1 justify-center">Cancel</button>
                   <button type="submit" className="btn-primary flex-1 justify-center">{editingReview ? 'Save Changes' : 'Publish Review'}</button>
                 </div>

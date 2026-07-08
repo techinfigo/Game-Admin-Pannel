@@ -110,11 +110,14 @@ export interface Announcement {
 export interface Review {
   id: string;
   studentName: string;
-  exam: string;
+  rank: string;        // e.g. "AIR-1 (GATE ME)" or "SSC-JE Selected"
+  exam: string;        // optional
+  course: string;      // e.g. "Lakshya | 1 Yr GATE Course"
+  branch: string;      // e.g. "Mechanical"
   rating: number;
   reviewText: string;
   photoUrl?: string;
-  date: string;
+  date: string;        // optional
 }
 
 export interface BlogPost {

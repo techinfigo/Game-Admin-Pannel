@@ -23,11 +23,17 @@ export type ResourceType = 'pdf' | 'video' | 'note' | 'link';
 
 export interface FreeResource {
   id: string;
+  resourceKind: string;   // "free" or "paid"
+  category: string;        // e.g. "Video Series", "PDF Notes", "PYQ Bank", "Strategy", "Full Course", "Test Series"
   title: string;
   description: string;
-  type: ResourceType;
-  fileOrLink: string;
+  fileOrLink: string;      // URL to watch/download/buy
+  image: string;           // thumbnail URL
+  action: string;          // button text for free items, e.g. "Watch Now" / "Download"
+  price: string;           // for paid items, e.g. "Rs. 24,999"
+  tag: string;             // for paid items, e.g. "Best Seller"
   examTag: string;
+  type: string;            // content type: pdf / video / note / link
 }
 
 export type JobStatus = 'Open' | 'Closed' | 'Yet to start';

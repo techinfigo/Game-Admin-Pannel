@@ -80,6 +80,59 @@ export interface Announcement {
   active: boolean;
 }
 
+export interface Review {
+  id: string;
+  studentName: string;
+  exam: string;
+  rating: number;
+  reviewText: string;
+  photoUrl?: string;
+  date: string;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  coverImageUrl: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  publishedDate: string;
+  tags: string[];
+  published: boolean;
+}
+
+export interface Faculty {
+  id: string;
+  name: string;
+  subject: string;
+  qualification: string;
+  photoUrl: string;
+  bio: string;
+  experienceYears: number;
+}
+
+export interface VideoLecture {
+  id: string;
+  title: string;
+  examTag: string;
+  youtubeUrl: string;
+  description: string;
+  thumbnailUrl?: string;
+}
+
+export interface HeroSlide {
+  id: string;
+  headline: string;
+  subheadline: string;
+  imageUrl: string;
+  ctaText: string;
+  ctaLink: string;
+  order: number;
+  active: boolean;
+}
+
 export interface DashboardStats {
   resources: number;
   jobs: number;

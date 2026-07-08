@@ -16,6 +16,11 @@ const Courses = React.lazy(() => import('./admin/Courses'));
 const Offers = React.lazy(() => import('./admin/Offers'));
 const Achievers = React.lazy(() => import('./admin/Achievers'));
 const Announcements = React.lazy(() => import('./admin/Announcements'));
+const Reviews = React.lazy(() => import('./admin/Reviews'));
+const Blog = React.lazy(() => import('./admin/Blog'));
+const Faculty = React.lazy(() => import('./admin/Faculty'));
+const VideoLectures = React.lazy(() => import('./admin/VideoLectures'));
+const HeroSlides = React.lazy(() => import('./admin/HeroSlides'));
 
 const Loading = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -67,6 +72,31 @@ export default function App() {
           <Route path="announcements" element={
             <React.Suspense fallback={<Loading />}>
               <Announcements />
+            </React.Suspense>
+          } />
+          <Route path="reviews" element={
+            <React.Suspense fallback={<Loading />}>
+              <Reviews />
+            </React.Suspense>
+          } />
+          <Route path="blog" element={
+            <React.Suspense fallback={<Loading />}>
+              <Blog />
+            </React.Suspense>
+          } />
+          <Route path="faculty" element={
+            <React.Suspense fallback={<Loading />}>
+              <Faculty />
+            </React.Suspense>
+          } />
+          <Route path="lectures" element={
+            <React.Suspense fallback={<Loading />}>
+              <VideoLectures />
+            </React.Suspense>
+          } />
+          <Route path="hero" element={
+            <React.Suspense fallback={<Loading />}>
+              <HeroSlides />
             </React.Suspense>
           } />
         </Route>

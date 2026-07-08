@@ -18,7 +18,12 @@ import {
   Menu, 
   X,
   Bell,
-  User
+  User,
+  Star,
+  BookOpen,
+  Users,
+  Video,
+  MonitorPlay
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -31,6 +36,11 @@ const navItems = [
   { path: '/admin/offers', icon: Tag, label: 'Offers / Banners' },
   { path: '/admin/achievers', icon: Trophy, label: 'Achievers' },
   { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
+  { path: '/admin/reviews', icon: Star, label: 'Reviews / Testimonials' },
+  { path: '/admin/blog', icon: BookOpen, label: 'Blog Posts' },
+  { path: '/admin/faculty', icon: Users, label: 'Faculty / Educators' },
+  { path: '/admin/lectures', icon: Video, label: 'Video Lectures' },
+  { path: '/admin/hero', icon: MonitorPlay, label: 'Hero Slides' },
 ];
 
 export default function AdminLayout() {
@@ -61,13 +71,9 @@ export default function AdminLayout() {
         <div className="flex flex-col h-full">
           {/* Logo Section */}
           <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-            <Link to="/admin" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-game-teal rounded-xl flex items-center justify-center text-white font-bold text-xl">
+            <Link to="/admin" className="flex items-center justify-center flex-1">
+              <div className="w-12 h-12 bg-game-teal rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-game-teal/20">
                 G
-              </div>
-              <div>
-                <h1 className="font-bold text-slate-900 leading-none">GAME Academy</h1>
-                <p className="text-[10px] text-game-teal font-bold uppercase tracking-wider mt-1">Admin Panel</p>
               </div>
             </Link>
             <button 

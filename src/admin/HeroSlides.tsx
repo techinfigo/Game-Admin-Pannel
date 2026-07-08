@@ -15,7 +15,10 @@ import {
   CheckCircle2,
   Clock,
   ArrowUpDown,
-  ExternalLink
+  ExternalLink,
+  Award,
+  Zap,
+  BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { HeroSlide } from '../types';
@@ -23,21 +26,37 @@ import { HeroSlide } from '../types';
 const initialSlides: HeroSlide[] = [
   {
     id: '1',
+    badge: 'New Batch Alert',
     headline: 'Ignite Your Engineering Career',
     subheadline: 'Expert coaching for GATE, SSC-JE, and PSU exams with top-tier faculty.',
     imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&auto=format&fit=crop&q=80',
     ctaText: 'Explore Courses',
     ctaLink: '/courses',
+    ctaText2: 'Download App',
+    ctaLink2: 'https://play.google.com/store/apps/details?id=co.iron.game',
+    stats: [
+      { value: '100k+', label: 'Aspirants' },
+      { value: '500+', label: 'Selections' },
+      { value: '4.8/5', label: 'App Rating' }
+    ],
     order: 1,
     active: true
   },
   {
     id: '2',
+    badge: 'Limited Seats',
     headline: 'GATE 2025 Crash Course',
     subheadline: 'Limited seats available for our intensive 3-month preparation program.',
     imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1600&auto=format&fit=crop&q=80',
     ctaText: 'Enroll Now',
     ctaLink: '/courses/gate-crash',
+    ctaText2: 'View Schedule',
+    ctaLink2: '/schedule',
+    stats: [
+      { value: '3 Months', label: 'Duration' },
+      { value: 'LIVE', label: 'Daily Classes' },
+      { value: '200+', label: 'Mock Tests' }
+    ],
     order: 2,
     active: true
   }
@@ -47,13 +66,18 @@ export default function HeroSlides() {
   const [slides, setSlides] = useState<HeroSlide[]>(initialSlides);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
+  const [statInput, setStatInput] = useState({ value: '', label: '' });
 
   const [formData, setFormData] = useState<Partial<HeroSlide>>({
+    badge: '',
     headline: '',
     subheadline: '',
     imageUrl: '',
     ctaText: 'Learn More',
     ctaLink: '',
+    ctaText2: '',
+    ctaLink2: '',
+    stats: [],
     order: 0,
     active: true
   });
@@ -65,16 +89,38 @@ export default function HeroSlides() {
     } else {
       setEditingSlide(null);
       setFormData({
+        badge: '',
         headline: '',
         subheadline: '',
         imageUrl: '',
         ctaText: 'Learn More',
         ctaLink: '',
+        ctaText2: '',
+        ctaLink2: '',
+        stats: [],
         order: slides.length + 1,
         active: true
       });
     }
+    setStatInput({ value: '', label: '' });
     setIsModalOpen(true);
+  };
+
+  const handleAddStat = () => {
+    if (statInput.value && statInput.label) {
+      setFormData(prev => ({
+        ...prev,
+        stats: [...(prev.stats || []), { ...statInput }]
+      }));
+      setStatInput({ value: '', label: '' });
+    }
+  };
+
+  const handleRemoveStat = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      stats: (prev.stats || []).filter((_, i) => i !== index)
+    }));
   };
 
   const handleCloseModal = () => {
@@ -152,24 +198,42 @@ export default function HeroSlides() {
               <div className="p-6 lg:p-8 flex-1 flex flex-col justify-between">
                 <div className="space-y-4">
                   <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2 py-0.5 bg-game-teal/10 text-game-teal text-[10px] font-bold uppercase rounded border border-game-teal/20">
+                        {slide.badge || 'PROMOTION'}
+                      </span>
+                    </div>
                     <h3 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight group-hover:text-game-teal transition-colors">
                       {slide.headline}
                     </h3>
-                    <p className="text-slate-500 mt-2 text-sm max-w-2xl leading-relaxed">
+                    <p className="text-slate-500 mt-2 text-sm max-w-2xl leading-relaxed line-clamp-2">
                       {slide.subheadline}
                     </p>
                   </div>
                   
                   <div className="flex flex-wrap gap-4 items-center">
                     <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Button:</span>
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Main:</span>
                       <span className="text-sm font-bold text-game-teal">{slide.ctaText}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <LinkIcon className="w-3.5 h-3.5" />
-                      <span className="truncate max-w-[200px]">{slide.ctaLink}</span>
-                    </div>
+                    {slide.ctaText2 && (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Secondary:</span>
+                        <span className="text-sm font-bold text-slate-600">{slide.ctaText2}</span>
+                      </div>
+                    )}
                   </div>
+
+                  {slide.stats && slide.stats.length > 0 && (
+                    <div className="flex flex-wrap gap-4 pt-2">
+                      {slide.stats.map((stat, i) => (
+                        <div key={i} className="flex flex-col">
+                          <span className="text-sm font-black text-slate-900">{stat.value}</span>
+                          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{stat.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between pt-8 mt-8 border-t border-slate-50">
@@ -239,68 +303,158 @@ export default function HeroSlides() {
                 <button onClick={handleCloseModal} className="p-3 hover:bg-slate-100 rounded-2xl transition-colors"><X className="w-6 h-6 text-slate-500" /></button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto">
+              <form onSubmit={handleSubmit} className="p-8 space-y-8 overflow-y-auto max-h-[75vh]">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="sm:col-span-2">
-                    <label className="label-text">Headline (Main Title)</label>
-                    <input 
-                      type="text" 
-                      value={formData.headline}
-                      onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
-                      className="input-field text-lg font-bold" placeholder="e.g. Ignite Your Future" required 
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="label-text">Subheadline (Supporting Text)</label>
-                    <textarea 
-                      value={formData.subheadline}
-                      onChange={(e) => setFormData({ ...formData, subheadline: e.target.value })}
-                      className="input-field min-h-[100px]" placeholder="Brief description to engage users..." required 
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="label-text">Background Image URL</label>
-                    <div className="relative">
-                      <input 
-                        type="url" 
-                        value={formData.imageUrl}
-                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                        className="input-field pl-11" placeholder="https://..." required 
-                      />
-                      <ImageIcon className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  {/* Visual Context */}
+                  <div className="sm:col-span-2 space-y-4">
+                    <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
+                      <ImageIcon className="w-4 h-4" />
+                      Visual Content
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="label-text">Top Badge / Label</label>
+                        <input 
+                          type="text" 
+                          value={formData.badge}
+                          onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
+                          className="input-field" placeholder="e.g. New Batch Alert" required 
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="label-text">Headline (Main Title)</label>
+                        <input 
+                          type="text" 
+                          value={formData.headline}
+                          onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
+                          className="input-field text-lg font-bold" placeholder="e.g. Ignite Your Future" required 
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="label-text">Subheadline (Supporting Text)</label>
+                        <textarea 
+                          value={formData.subheadline}
+                          onChange={(e) => setFormData({ ...formData, subheadline: e.target.value })}
+                          className="input-field min-h-[80px]" placeholder="Brief description to engage users..." required 
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="label-text">Background Image URL</label>
+                        <input 
+                          type="url" 
+                          value={formData.imageUrl}
+                          onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                          className="input-field" placeholder="https://..." required 
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="label-text">Button Text (CTA)</label>
-                    <input 
-                      type="text" 
-                      value={formData.ctaText}
-                      onChange={(e) => setFormData({ ...formData, ctaText: e.target.value })}
-                      className="input-field font-bold" placeholder="e.g. Get Started" required 
-                    />
-                  </div>
-                  <div>
-                    <label className="label-text">Button Link (CTA Link)</label>
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        value={formData.ctaLink}
-                        onChange={(e) => setFormData({ ...formData, ctaLink: e.target.value })}
-                        className="input-field pl-11" placeholder="/courses" required 
-                      />
-                      <LinkIcon className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+
+                  {/* Call to Actions */}
+                  <div className="sm:col-span-2 space-y-4">
+                    <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
+                      <Zap className="w-4 h-4" />
+                      Action Buttons
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border p-4 rounded-2xl bg-slate-50/50">
+                      <div>
+                        <label className="label-text">Primary Text</label>
+                        <input 
+                          type="text" 
+                          value={formData.ctaText}
+                          onChange={(e) => setFormData({ ...formData, ctaText: e.target.value })}
+                          className="input-field font-bold" placeholder="e.g. Get Started" required 
+                        />
+                      </div>
+                      <div>
+                        <label className="label-text">Primary Link</label>
+                        <input 
+                          type="text" 
+                          value={formData.ctaLink}
+                          onChange={(e) => setFormData({ ...formData, ctaLink: e.target.value })}
+                          className="input-field" placeholder="/courses" required 
+                        />
+                      </div>
+                      <div>
+                        <label className="label-text">Secondary Text (Optional)</label>
+                        <input 
+                          type="text" 
+                          value={formData.ctaText2}
+                          onChange={(e) => setFormData({ ...formData, ctaText2: e.target.value })}
+                          className="input-field" placeholder="e.g. Download App" 
+                        />
+                      </div>
+                      <div>
+                        <label className="label-text">Secondary Link (Optional)</label>
+                        <input 
+                          type="text" 
+                          value={formData.ctaLink2}
+                          onChange={(e) => setFormData({ ...formData, ctaLink2: e.target.value })}
+                          className="input-field" placeholder="https://..." 
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="label-text">Display Order</label>
-                    <input 
-                      type="number" 
-                      value={formData.order}
-                      onChange={(e) => setFormData({ ...formData, order: Number(e.target.value) })}
-                      className="input-field" min="1" required 
-                    />
+
+                  {/* Stats bar */}
+                  <div className="sm:col-span-2 space-y-4">
+                    <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
+                      <BarChart3 className="w-4 h-4" />
+                      Achievement Stats (Max 3)
+                    </div>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input 
+                          type="text" 
+                          value={statInput.value}
+                          onChange={(e) => setStatInput({ ...statInput, value: e.target.value })}
+                          className="input-field" 
+                          placeholder="Value (e.g. 100k+)" 
+                        />
+                        <div className="flex gap-2">
+                          <input 
+                            type="text" 
+                            value={statInput.label}
+                            onChange={(e) => setStatInput({ ...statInput, label: e.target.value })}
+                            className="input-field flex-1" 
+                            placeholder="Label (e.g. Aspirants)" 
+                          />
+                          <button 
+                            type="button" 
+                            onClick={handleAddStat}
+                            disabled={(formData.stats?.length || 0) >= 3}
+                            className="btn-secondary px-4 disabled:opacity-50"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        {formData.stats?.map((stat, i) => (
+                          <div key={i} className="flex items-center gap-3 px-3 py-2 bg-slate-100 rounded-xl border border-slate-200">
+                            <div className="flex flex-col leading-tight">
+                              <span className="text-xs font-black text-slate-900">{stat.value}</span>
+                              <span className="text-[9px] text-slate-500 uppercase font-bold">{stat.label}</span>
+                            </div>
+                            <button type="button" onClick={() => handleRemoveStat(i)} className="text-slate-400 hover:text-red-500">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-end pb-2">
+
+                  <div className="flex items-center justify-between sm:col-span-2 pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <label className="label-text mb-0">Display Order</label>
+                      <input 
+                        type="number" 
+                        value={formData.order}
+                        onChange={(e) => setFormData({ ...formData, order: Number(e.target.value) })}
+                        className="input-field w-24" min="1" required 
+                      />
+                    </div>
                     <label className="flex items-center gap-3 cursor-pointer group">
                       <div className="relative">
                         <input 
@@ -312,15 +466,15 @@ export default function HeroSlides() {
                         <div className={`w-12 h-6 rounded-full transition-colors ${formData.active ? 'bg-game-teal' : 'bg-slate-200'}`}></div>
                         <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.active ? 'translate-x-6' : 'translate-x-0'}`}></div>
                       </div>
-                      <span className="font-bold text-slate-700">Slide is Active</span>
+                      <span className="font-bold text-slate-700">Active</span>
                     </label>
                   </div>
                 </div>
 
-                <div className="pt-8 flex gap-4 sticky bottom-0 bg-white pb-2">
+                <div className="pt-4 flex gap-4 sticky bottom-0 bg-white pb-2">
                   <button type="button" onClick={handleCloseModal} className="btn-secondary flex-1 py-4 justify-center text-base">Cancel</button>
                   <button type="submit" className="btn-primary flex-1 py-4 justify-center text-base">
-                    {editingSlide ? 'Save Slide' : 'Create Slide'}
+                    {editingSlide ? 'Save Changes' : 'Create Slide'}
                   </button>
                 </div>
               </form>

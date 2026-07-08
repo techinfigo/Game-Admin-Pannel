@@ -166,11 +166,15 @@ export interface VideoLecture {
 
 export interface HeroSlide {
   id: string;
+  badge: string;
   headline: string;
   subheadline: string;
-  imageUrl: string;
-  ctaText: string;
-  ctaLink: string;
+  ctaText: string;        // primary button text
+  ctaLink: string;        // primary button link
+  ctaText2: string;       // secondary button text
+  ctaLink2: string;       // secondary button link
+  stats: { value: string; label: string }[];   // e.g. [{value:"100k+", label:"Aspirants"}]
+  imageUrl?: string;      // optional
   order: number;
   active: boolean;
 }

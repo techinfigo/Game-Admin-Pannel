@@ -48,12 +48,24 @@ export interface JobUpdate {
 export interface Course {
   id: string;
   title: string;
-  examTag: string;
-  description: string;
+  tagline: string;
   imageUrl: string;
-  price?: string;
-  purchaseLink: string;
+  tag: string;           // badge text, e.g. "BASIC BATCH"
+  category: string;      // e.g. "GATE / ESE"
+  exam: string;          // e.g. "GATE / ESE / PSUs / ISRO / BARC"
+  branch: string;        // e.g. "Mechanical"
+  duration: string;      // e.g. "12 Months"
+  eligibility: string;
+  language: string;      // e.g. "Hinglish"
+  mentorship: string;    // "Yes" or "No"
+  price: string;         // e.g. "Rs. 6,999"
+  originalPrice: string; // e.g. "Rs. 13,999"
+  discount: string;      // e.g. "50% OFF"
+  rating: number;        // e.g. 4.8
+  enrolledCount: string; // e.g. "11.2k"
+  liveCount: string;     // e.g. "350"
   features: string[];
+  enrollLink: string;    // e.g. https://courses.gameacademy.in/wlp/...
 }
 
 export interface Offer {

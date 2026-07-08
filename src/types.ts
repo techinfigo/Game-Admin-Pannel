@@ -82,11 +82,15 @@ export interface Offer {
 
 export interface Achiever {
   id: string;
+  type: string;        // one of: "Video Short", "GATE Topper", "Ranker", "Job Selection"
   name: string;
-  exam: string;
-  achievement: string;
-  photoUrl: string;
-  quote: string;
+  achievement: string; // holds the rank or job title, e.g. "AIR 13" or "Junior Engineer (Civil)"
+  exam: string;        // e.g. "GATE ME" or "CPWD · 2023"
+  college: string;     // optional
+  year: string;        // optional
+  youtubeUrl: string;  // optional
+  photoUrl: string;    // optional
+  quote: string;       // optional
 }
 
 export interface Announcement {

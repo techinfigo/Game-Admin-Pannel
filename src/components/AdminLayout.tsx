@@ -30,28 +30,50 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const navItems = [
-  { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/admin/settings', icon: Settings, label: 'Site Settings' },
-  { path: '/admin/resources', icon: FileText, label: 'Free Resources' },
-  { path: '/admin/jobs', icon: Briefcase, label: 'Job Updates' },
-  { path: '/admin/courses', icon: GraduationCap, label: 'Courses' },
-  { path: '/admin/offers', icon: Tag, label: 'Offers / Banners' },
-  { path: '/admin/achievers', icon: Trophy, label: 'Achievers' },
-  { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
-  { path: '/admin/reviews', icon: Star, label: 'Reviews / Testimonials' },
-  { path: '/admin/blog', icon: BookOpen, label: 'Blog Posts' },
-  { path: '/admin/faculty', icon: Users, label: 'Faculty / Educators' },
-  { path: '/admin/lectures', icon: Video, label: 'Video Lectures' },
-  { path: '/admin/hero', icon: MonitorPlay, label: 'Hero Slides' },
-  { path: '/admin/pdf-store', icon: ShoppingBag, label: 'PDF Store' },
-  { path: '/admin/students', icon: UserCheck, label: 'Students' },
-  { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
+const navGroups = [
+  {
+    title: 'Overview',
+    items: [
+      { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+    ]
+  },
+  {
+    title: 'Website',
+    items: [
+      { path: '/admin/hero', icon: MonitorPlay, label: 'Hero Slides' },
+      { path: '/admin/courses', icon: GraduationCap, label: 'Courses' },
+      { path: '/admin/jobs', icon: Briefcase, label: 'Job Updates' },
+      { path: '/admin/offers', icon: Tag, label: 'Offers' },
+      { path: '/admin/achievers', icon: Trophy, label: 'Achievers' },
+      { path: '/admin/reviews', icon: Star, label: 'Reviews' },
+      { path: '/admin/faculty', icon: Users, label: 'Faculty' },
+      { path: '/admin/lectures', icon: Video, label: 'Video Lectures' },
+      { path: '/admin/resources', icon: FileText, label: 'Free Resources' },
+      { path: '/admin/blog', icon: BookOpen, label: 'Blog' },
+    ]
+  },
+  {
+    title: 'Student Portal',
+    items: [
+      { path: '/admin/pdf-store', icon: ShoppingBag, label: 'PDF Store' },
+      { path: '/admin/students', icon: UserCheck, label: 'Students' },
+      { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
+      { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
+    ]
+  },
+  {
+    title: 'Settings',
+    items: [
+      { path: '/admin/settings', icon: Settings, label: 'Site Settings' },
+    ]
+  }
 ];
 
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
+
+  const allItems = navGroups.flatMap(group => group.items);
 
   return (
     <div className="h-screen bg-slate-50 flex overflow-hidden">
@@ -94,24 +116,36 @@ export default function AdminLayout() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                    isActive 
-                      ? 'bg-game-teal text-white shadow-lg shadow-game-teal/20' 
-                      : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              );
-            })}
+          <nav className="flex-1 overflow-y-auto p-4 space-y-8 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+            {navGroups.map((group, groupIdx) => (
+              <div key={group.title} className="space-y-2">
+                <h3 className="px-4 text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 opacity-80">
+                  {group.title}
+                </h3>
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group ${
+                          isActive 
+                            ? 'bg-game-teal text-white shadow-lg shadow-game-teal/20' 
+                            : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        <item.icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
+                        <span className="font-semibold text-sm">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+                {groupIdx < navGroups.length - 1 && (
+                  <div className="mx-4 h-px bg-slate-800/50 my-6" />
+                )}
+              </div>
+            ))}
           </nav>
 
           {/* Logout Section */}
@@ -136,7 +170,7 @@ export default function AdminLayout() {
               <Menu className="w-6 h-6" />
             </button>
             <h2 className="text-xl font-bold text-slate-800 hidden sm:block">
-              {navItems.find(i => i.path === location.pathname)?.label || 'Dashboard'}
+              {allItems.find(i => i.path === location.pathname)?.label || 'Dashboard'}
             </h2>
           </div>
 

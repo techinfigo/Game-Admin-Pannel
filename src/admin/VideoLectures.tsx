@@ -149,7 +149,7 @@ export default function VideoLectures() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredLectures.map((lecture) => (
             <motion.div 
               key={lecture.id}
@@ -163,40 +163,40 @@ export default function VideoLectures() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80" 
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <PlayCircle className="w-16 h-16 text-white opacity-60 group-hover:opacity-100 transition-opacity" />
+                  <PlayCircle className="w-12 h-12 text-white opacity-60 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
-                  <span className="px-3 py-1 bg-game-teal text-white text-[10px] font-bold uppercase rounded-lg shadow-lg flex items-center gap-2">
-                    <TagIcon className="w-3 h-3" />
+                <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                  <span className="px-2 py-0.5 bg-game-teal text-white text-[9px] font-bold uppercase rounded-md shadow-lg flex items-center gap-1.5">
+                    <TagIcon className="w-2.5 h-2.5" />
                     {lecture.tag}
                   </span>
                   {lecture.examTag && (
-                    <span className="px-3 py-1 bg-white text-slate-900 text-[10px] font-bold uppercase rounded-lg shadow-lg flex items-center gap-2">
-                      <GraduationCap className="w-3 h-3" />
+                    <span className="px-2 py-0.5 bg-white text-slate-900 text-[9px] font-bold uppercase rounded-md shadow-lg flex items-center gap-1.5">
+                      <GraduationCap className="w-2.5 h-2.5" />
                       {lecture.examTag}
                     </span>
                   )}
                 </div>
-                <div className="absolute bottom-4 right-4 flex items-center gap-3">
-                  <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1.5">
-                    <Clock className="w-3 h-3" />
+                <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                  <div className="bg-black/60 backdrop-blur-md text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                    <Clock className="w-2.5 h-2.5" />
                     {lecture.duration}
                   </div>
-                  <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1.5">
-                    <Eye className="w-3 h-3" />
+                  <div className="bg-black/60 backdrop-blur-md text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                    <Eye className="w-2.5 h-2.5" />
                     {lecture.views}
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 flex-1 flex flex-col justify-between">
+              <div className="p-4 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-lg line-clamp-1 mb-1 group-hover:text-game-teal transition-colors">
+                  <h3 className="font-bold text-slate-900 text-sm line-clamp-1 mb-0.5 group-hover:text-game-teal transition-colors">
                     {lecture.title}
                   </h3>
-                  <p className="text-xs text-game-teal font-bold mb-3 line-clamp-1 opacity-80">{lecture.subtitle}</p>
+                  <p className="text-[10px] text-game-teal font-bold mb-2 line-clamp-1 opacity-80">{lecture.subtitle}</p>
                   {lecture.description && (
-                    <p className="text-slate-500 text-sm line-clamp-2 mb-4 leading-relaxed">
+                    <p className="text-slate-500 text-xs line-clamp-2 mb-3 leading-relaxed">
                       {lecture.description}
                     </p>
                   )}
@@ -204,26 +204,26 @@ export default function VideoLectures() {
                     href={lecture.youtubeUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-xs font-bold text-red-600 hover:text-red-700 transition-colors uppercase tracking-wider"
+                    className="inline-flex items-center gap-1.5 text-[10px] font-bold text-red-600 hover:text-red-700 transition-colors uppercase tracking-wider"
                   >
-                    <Youtube className="w-4 h-4" />
-                    Watch on YouTube
-                    <ExternalLink className="w-3 h-3" />
+                    <Youtube className="w-3.5 h-3.5" />
+                    Watch Video
+                    <ExternalLink className="w-2.5 h-2.5" />
                   </a>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-6 mt-4 border-t border-slate-50">
+                <div className="flex items-center justify-end gap-1.5 pt-4 mt-3 border-t border-slate-50">
                   <button 
                     onClick={() => handleOpenModal(lecture)}
-                    className="p-2 text-slate-400 hover:text-game-teal hover:bg-game-teal/5 rounded-xl transition-all"
+                    className="p-1.5 text-slate-400 hover:text-game-teal hover:bg-game-teal/5 rounded-lg transition-all"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={() => handleDelete(lecture.id)}
-                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>

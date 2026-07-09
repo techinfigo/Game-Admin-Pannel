@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  GraduationCap, 
-  DollarSign, 
-  Link as LinkIcon, 
-  Edit2, 
-  Trash2, 
-  X, 
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  Search,
+  GraduationCap,
+  DollarSign,
+  Link as LinkIcon,
+  Edit2,
+  Trash2,
+  X,
   CheckCircle,
   Image as ImageIcon,
   ExternalLink,
@@ -28,56 +28,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Course } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialCourses: Course[] = [
-  {
-    id: '1',
-    title: 'GATE 2027 Full Concept Batch',
-    tagline: 'Comprehensive course covering all engineering mathematics and core subjects.',
-    imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60',
-    tag: 'PREMIUM BATCH',
-    category: 'GATE / ESE',
-    exam: 'GATE / ESE / PSUs',
-    branch: 'Mechanical Engineering',
-    duration: '12 Months',
-    eligibility: 'B.E. / B.Tech Students',
-    language: 'Hinglish',
-    mentorship: 'Yes',
-    price: 'Rs. 14,999',
-    originalPrice: 'Rs. 29,999',
-    discount: '50% OFF',
-    rating: 4.8,
-    enrolledCount: '12.4k',
-    liveCount: '450',
-    features: ['300+ Live Classes', 'Solved PYQs', 'Weekly Tests', 'Personal Mentorship'],
-    enrollLink: 'https://courses.gameacademy.in/gate-2027'
-  },
-  {
-    id: '2',
-    title: 'SSC-JE Quick Revision Crash Course',
-    tagline: 'Intensive revision program focused on high-yield topics.',
-    imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60',
-    tag: 'EXPRESS BATCH',
-    category: 'SSC-JE',
-    exam: 'SSC-JE / State JE',
-    branch: 'Civil Engineering',
-    duration: '3 Months',
-    eligibility: 'Diploma / B.Tech',
-    language: 'Hindi',
-    mentorship: 'No',
-    price: 'Rs. 4,999',
-    originalPrice: 'Rs. 9,999',
-    discount: '50% OFF',
-    rating: 4.6,
-    enrolledCount: '8.2k',
-    liveCount: '210',
-    features: ['Short Notes', 'Formula Sheets', 'Daily Practice Sets'],
-    enrollLink: 'https://courses.gameacademy.in/ssc-je-crash'
-  }
-];
+const COLLECTION = 'courses';
 
 export default function Courses() {
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -105,6 +63,24 @@ export default function Courses() {
   });
 
   const [featureInput, setFeatureInput] = useState('');
+
+  const loadCourses = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<Course>(COLLECTION);
+      setCourses(data);
+    } catch (error) {
+      console.error('Failed to load courses', error);
+      setErrorMessage('Failed to load courses.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCourses();
+  }, []);
 
   const handleOpenModal = (course?: Course) => {
     if (course) {
@@ -160,26 +136,33 @@ export default function Courses() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingCourse) {
-      // TODO: connect to Firestore
-      setCourses(prev => prev.map(c => c.id === editingCourse.id ? { ...c, ...formData } as Course : c));
-    } else {
-      // TODO: connect to Firestore
-      const newCourse = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as Course;
-      setCourses(prev => [newCourse, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingCourse) {
+        await updateItem<Course>(COLLECTION, editingCourse.id, formData);
+      } else {
+        await addItem<Course>(COLLECTION, formData as Course);
+      }
+      await loadCourses();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save course', error);
+      setErrorMessage('Failed to save course.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this course?')) {
-      // TODO: connect to Firestore
-      setCourses(prev => prev.filter(c => c.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadCourses();
+      } catch (error) {
+        console.error('Failed to delete course', error);
+        setErrorMessage('Failed to delete course.');
+      }
     }
   };
 
@@ -188,6 +171,22 @@ export default function Courses() {
     c.exam.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.branch.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Courses</h1>
+            <p className="text-slate-500 mt-1">Manage and publish educational courses for competitive exams.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -202,12 +201,18 @@ export default function Courses() {
         </button>
       </div>
 
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="admin-card">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <input 
-              type="text" 
-              placeholder="Search courses..." 
+            <input
+              type="text"
+              placeholder="Search courses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-11"
@@ -216,6 +221,12 @@ export default function Courses() {
           </div>
         </div>
 
+        {filteredCourses.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+            <GraduationCap className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">No courses found.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredCourses.map((course) => (
             <motion.div 
@@ -311,17 +322,18 @@ export default function Courses() {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
 
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
               onClick={handleCloseModal}
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden relative z-10 max-h-[90vh] flex flex-col"
             >

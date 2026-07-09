@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Users, 
-  Edit2, 
-  Trash2, 
-  X, 
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  Search,
+  Users,
+  Edit2,
+  Trash2,
+  X,
   User,
   GraduationCap,
   BookOpen,
@@ -19,45 +19,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Faculty } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialFaculty: Faculty[] = [
-  {
-    id: '1',
-    name: 'Gaurav Babu Sir',
-    role: 'Founder & Chief Mentor',
-    expLabel: '14+ YRS EXP.',
-    experience: '14+ Years of Teaching Experience',
-    photoUrl: 'https://i.ibb.co/vzB7pLq/gaurav-babu.png',
-    stats: [
-      'Mentored 50,000+ students',
-      'ESE AIR 63',
-      'Ex-Faculty, Made Easy'
-    ],
-    isChiefMentor: true,
-    subject: 'Thermal & Manufacturing',
-    qualification: 'M.Tech (IIT Delhi)',
-    bio: 'Visionary educator and mentor for thousands of GATE/ESE aspirants across India.'
-  },
-  {
-    id: '2',
-    name: 'Vikram Singh',
-    role: 'Structural Engineering Expert',
-    expLabel: '10+ YRS EXP.',
-    experience: '10+ Years of Academic Excellence',
-    photoUrl: 'https://i.pravatar.cc/150?u=vikram',
-    stats: [
-      'Authored 3 Engineering Books',
-      'Consultant for Smart City Projects'
-    ],
-    isChiefMentor: false,
-    subject: 'Civil Engineering',
-    qualification: 'Ph.D. (IIT Roorkee)',
-    bio: 'Specialist in concrete structures and earthquake engineering.'
-  }
-];
+const COLLECTION = 'faculty';
 
 export default function FacultyPage() {
-  const [faculty, setFaculty] = useState<Faculty[]>(initialFaculty);
+  const [faculty, setFaculty] = useState<Faculty[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,6 +44,24 @@ export default function FacultyPage() {
     qualification: '',
     bio: ''
   });
+
+  const loadFaculty = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<Faculty>(COLLECTION);
+      setFaculty(data);
+    } catch (error) {
+      console.error('Failed to load faculty', error);
+      setErrorMessage('Failed to load faculty.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFaculty();
+  }, []);
 
   const handleOpenModal = (member?: Faculty) => {
     if (member) {
@@ -122,23 +109,33 @@ export default function FacultyPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingFaculty) {
-      setFaculty(prev => prev.map(f => f.id === editingFaculty.id ? { ...f, ...formData } as Faculty : f));
-    } else {
-      const newMember = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as Faculty;
-      setFaculty(prev => [newMember, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingFaculty) {
+        await updateItem<Faculty>(COLLECTION, editingFaculty.id, formData);
+      } else {
+        await addItem<Faculty>(COLLECTION, formData as Faculty);
+      }
+      await loadFaculty();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save faculty member', error);
+      setErrorMessage('Failed to save faculty member.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this faculty member?')) {
-      setFaculty(prev => prev.filter(f => f.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadFaculty();
+      } catch (error) {
+        console.error('Failed to delete faculty member', error);
+        setErrorMessage('Failed to delete faculty member.');
+      }
     }
   };
 
@@ -146,6 +143,22 @@ export default function FacultyPage() {
     f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (f.role && f.role.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Faculty / Educators</h1>
+            <p className="text-slate-500 mt-1">Manage the team of expert educators and their professional profiles.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -160,12 +173,18 @@ export default function FacultyPage() {
         </button>
       </div>
 
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="admin-card">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <input 
-              type="text" 
-              placeholder="Search by name or role..." 
+            <input
+              type="text"
+              placeholder="Search by name or role..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-11"
@@ -174,6 +193,12 @@ export default function FacultyPage() {
           </div>
         </div>
 
+        {filteredFaculty.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+            <Users className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">No faculty members found.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredFaculty.map((member) => (
             <motion.div 
@@ -252,6 +277,7 @@ export default function FacultyPage() {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
 
       <AnimatePresence>

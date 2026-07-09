@@ -3,50 +3,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Tag, 
-  Calendar, 
-  Link as LinkIcon, 
-  Edit2, 
-  Trash2, 
-  X, 
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  Search,
+  Tag,
+  Calendar,
+  Link as LinkIcon,
+  Edit2,
+  Trash2,
+  X,
   Image as ImageIcon,
   CheckCircle2,
   Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Offer } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialOffers: Offer[] = [
-  {
-    id: '1',
-    badge: 'Limited-Time Power Deal',
-    title: 'Monsoon Mega Sale',
-    description: 'Flat 20% OFF on all GATE 2027 Batches. Limited time offer.',
-    imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4638d9f8e?w=800&auto=format&fit=crop&q=60',
-    ctaText: 'Claim Discount',
-    ctaLink: 'https://example.com/discount',
-    active: true,
-    expiryDate: '2026-07-31'
-  },
-  {
-    id: '2',
-    badge: 'Special Bonus',
-    title: 'Early Bird SSC-JE',
-    description: 'Join the new batch before July 10 and get FREE Test Series.',
-    imageUrl: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=800&auto=format&fit=crop&q=60',
-    ctaText: 'Learn More',
-    ctaLink: 'https://example.com/ssc-offer',
-    active: false,
-    expiryDate: '2026-07-10'
-  }
-];
+const COLLECTION = 'offers';
 
 export default function Offers() {
-  const [offers, setOffers] = useState<Offer[]>(initialOffers);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,6 +41,24 @@ export default function Offers() {
     active: true,
     expiryDate: ''
   });
+
+  const loadOffers = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<Offer>(COLLECTION);
+      setOffers(data);
+    } catch (error) {
+      console.error('Failed to load offers', error);
+      setErrorMessage('Failed to load offers.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadOffers();
+  }, []);
 
   const handleOpenModal = (offer?: Offer) => {
     if (offer) {
@@ -87,37 +85,66 @@ export default function Offers() {
     setEditingOffer(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingOffer) {
-      // TODO: connect to Firestore
-      setOffers(prev => prev.map(o => o.id === editingOffer.id ? { ...o, ...formData } as Offer : o));
-    } else {
-      // TODO: connect to Firestore
-      const newOffer = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as Offer;
-      setOffers(prev => [newOffer, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingOffer) {
+        await updateItem<Offer>(COLLECTION, editingOffer.id, formData);
+      } else {
+        await addItem<Offer>(COLLECTION, formData as Offer);
+      }
+      await loadOffers();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save offer', error);
+      setErrorMessage('Failed to save offer.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this offer?')) {
-      // TODO: connect to Firestore
-      setOffers(prev => prev.filter(o => o.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadOffers();
+      } catch (error) {
+        console.error('Failed to delete offer', error);
+        setErrorMessage('Failed to delete offer.');
+      }
     }
   };
 
-  const toggleStatus = (id: string) => {
-    // TODO: connect to Firestore
-    setOffers(prev => prev.map(o => o.id === id ? { ...o, active: !o.active } : o));
+  const toggleStatus = async (offer: Offer) => {
+    setErrorMessage(null);
+    try {
+      await updateItem<Offer>(COLLECTION, offer.id, { active: !offer.active });
+      await loadOffers();
+    } catch (error) {
+      console.error('Failed to update offer status', error);
+      setErrorMessage('Failed to update offer status.');
+    }
   };
 
   const filteredOffers = offers.filter(o => 
     o.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Offers & Banners</h1>
+            <p className="text-slate-500 mt-1">Manage promotional banners and special discounts displayed on the site.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -132,12 +159,18 @@ export default function Offers() {
         </button>
       </div>
 
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="admin-card">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <input 
-              type="text" 
-              placeholder="Search offers..." 
+            <input
+              type="text"
+              placeholder="Search offers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-11"
@@ -146,6 +179,12 @@ export default function Offers() {
           </div>
         </div>
 
+        {filteredOffers.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+            <Tag className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">No offers found.</p>
+          </div>
+        ) : (
         <div className="space-y-6">
           {filteredOffers.map((offer) => (
             <motion.div 
@@ -169,8 +208,8 @@ export default function Offers() {
                         )}
                         <h3 className="font-bold text-xl text-slate-900">{offer.title}</h3>
                       </div>
-                      <button 
-                        onClick={() => toggleStatus(offer.id)}
+                      <button
+                        onClick={() => toggleStatus(offer)}
                         className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1 transition-colors ${
                           offer.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
                         }`}
@@ -215,6 +254,7 @@ export default function Offers() {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
 
       <AnimatePresence>

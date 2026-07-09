@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  FileText, 
-  Video, 
-  Link as LinkIcon, 
-  StickyNote, 
-  MoreVertical, 
-  Edit2, 
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  Search,
+  FileText,
+  Video,
+  Link as LinkIcon,
+  StickyNote,
+  MoreVertical,
+  Edit2,
   Trash2,
   X,
   Upload,
@@ -24,40 +24,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FreeResource } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialResources: FreeResource[] = [
-  {
-    id: '1',
-    resourceKind: 'free',
-    category: 'PDF Notes',
-    title: 'GATE 2025 Civil Engineering Syllabus',
-    description: 'Complete breakdown of topics for GATE 2025 Civil Engineering paper.',
-    type: 'pdf',
-    fileOrLink: 'https://example.com/gate-ce-syllabus.pdf',
-    image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
-    action: 'Download PDF',
-    price: '',
-    tag: '',
-    examTag: 'GATE'
-  },
-  {
-    id: '2',
-    resourceKind: 'paid',
-    category: 'Video Series',
-    title: 'Advanced Thermodynamics Masterclass',
-    description: 'Comprehensive 50-hour video series covering all complex topics.',
-    type: 'video',
-    fileOrLink: 'https://courses.gameacademy.in/thermo-master',
-    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800',
-    action: '',
-    price: 'Rs. 4,999',
-    tag: 'Best Seller',
-    examTag: 'GATE'
-  }
-];
+const COLLECTION = 'resources';
 
 export default function FreeResources() {
-  const [resources, setResources] = useState<FreeResource[]>(initialResources);
+  const [resources, setResources] = useState<FreeResource[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<FreeResource | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,6 +49,24 @@ export default function FreeResources() {
     tag: '',
     examTag: ''
   });
+
+  const loadResources = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<FreeResource>(COLLECTION);
+      setResources(data);
+    } catch (error) {
+      console.error('Failed to load resources', error);
+      setErrorMessage('Failed to load resources.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadResources();
+  }, []);
 
   const handleOpenModal = (resource?: FreeResource) => {
     if (resource) {
@@ -104,26 +96,33 @@ export default function FreeResources() {
     setEditingResource(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingResource) {
-      // TODO: connect to Firestore
-      setResources(prev => prev.map(r => r.id === editingResource.id ? { ...r, ...formData } as FreeResource : r));
-    } else {
-      // TODO: connect to Firestore
-      const newResource = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as FreeResource;
-      setResources(prev => [newResource, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingResource) {
+        await updateItem<FreeResource>(COLLECTION, editingResource.id, formData);
+      } else {
+        await addItem<FreeResource>(COLLECTION, formData as FreeResource);
+      }
+      await loadResources();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save resource', error);
+      setErrorMessage('Failed to save resource.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this resource?')) {
-      // TODO: connect to Firestore
-      setResources(prev => prev.filter(r => r.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadResources();
+      } catch (error) {
+        console.error('Failed to delete resource', error);
+        setErrorMessage('Failed to delete resource.');
+      }
     }
   };
 
@@ -143,6 +142,22 @@ export default function FreeResources() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Knowledge Pitara</h1>
+            <p className="text-slate-500 mt-1">Manage free and paid study resources, videos, and PDFs.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -156,13 +171,19 @@ export default function FreeResources() {
         </button>
       </div>
 
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="admin-card">
         {/* Search & Filter */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <input 
-              type="text" 
-              placeholder="Search by title, category or exam tag..." 
+            <input
+              type="text"
+              placeholder="Search by title, category or exam tag..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-11"
@@ -171,7 +192,12 @@ export default function FreeResources() {
           </div>
         </div>
 
-        {/* Resources Table */}
+        {filteredResources.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+            <FileText className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">No resources found.</p>
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -256,6 +282,7 @@ export default function FreeResources() {
             </tbody>
           </table>
         </div>
+        )}
       </div>
 
       {/* Modal */}

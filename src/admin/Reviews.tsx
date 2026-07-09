@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Star, 
-  Edit2, 
-  Trash2, 
-  X, 
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  Search,
+  Star,
+  Edit2,
+  Trash2,
+  X,
   User,
   GraduationCap,
   Calendar,
@@ -18,36 +18,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Review } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialReviews: Review[] = [
-  {
-    id: '1',
-    studentName: 'Amit Verma',
-    rank: 'AIR-12 (GATE ME)',
-    exam: 'GATE 2024',
-    course: 'Lakshya | 1 Yr GATE Course',
-    branch: 'Mechanical',
-    rating: 5,
-    reviewText: 'The conceptual clarity provided by GAME Academy is unmatched. Highly recommended for all engineering students.',
-    photoUrl: 'https://i.pravatar.cc/150?u=amit',
-    date: '2026-06-15'
-  },
-  {
-    id: '2',
-    studentName: 'Sneha Kapur',
-    rank: 'Selected - CPWD',
-    exam: 'SSC-JE 2023',
-    course: 'Victory Batch | SSC-JE',
-    branch: 'Civil',
-    rating: 5,
-    reviewText: 'Excellent faculty and study material. The test series was very similar to the actual exam pattern.',
-    photoUrl: 'https://i.pravatar.cc/150?u=sneha',
-    date: '2026-05-20'
-  }
-];
+const COLLECTION = 'reviews';
 
 export default function Reviews() {
-  const [reviews, setReviews] = useState<Review[]>(initialReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,6 +41,24 @@ export default function Reviews() {
     photoUrl: '',
     date: new Date().toISOString().split('T')[0]
   });
+
+  const loadReviews = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<Review>(COLLECTION);
+      setReviews(data);
+    } catch (error) {
+      console.error('Failed to load reviews', error);
+      setErrorMessage('Failed to load reviews.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReviews();
+  }, []);
 
   const handleOpenModal = (review?: Review) => {
     if (review) {
@@ -90,26 +86,33 @@ export default function Reviews() {
     setEditingReview(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingReview) {
-      // TODO: connect to Firestore
-      setReviews(prev => prev.map(r => r.id === editingReview.id ? { ...r, ...formData } as Review : r));
-    } else {
-      // TODO: connect to Firestore
-      const newReview = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as Review;
-      setReviews(prev => [newReview, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingReview) {
+        await updateItem<Review>(COLLECTION, editingReview.id, formData);
+      } else {
+        await addItem<Review>(COLLECTION, formData as Review);
+      }
+      await loadReviews();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save review', error);
+      setErrorMessage('Failed to save review.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this review?')) {
-      // TODO: connect to Firestore
-      setReviews(prev => prev.filter(r => r.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadReviews();
+      } catch (error) {
+        console.error('Failed to delete review', error);
+        setErrorMessage('Failed to delete review.');
+      }
     }
   };
 
@@ -119,6 +122,22 @@ export default function Reviews() {
     r.rank.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.course.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Reviews / Testimonials</h1>
+            <p className="text-slate-500 mt-1">Manage student feedback and ratings displayed on the website.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -132,6 +151,12 @@ export default function Reviews() {
           Add Review
         </button>
       </div>
+
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
 
       <div className="admin-card">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">

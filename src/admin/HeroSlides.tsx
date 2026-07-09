@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  MonitorPlay, 
-  Edit2, 
-  Trash2, 
-  X, 
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  MonitorPlay,
+  Edit2,
+  Trash2,
+  X,
   Image as ImageIcon,
   Link as LinkIcon,
   CheckCircle2,
@@ -22,48 +22,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { HeroSlide } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialSlides: HeroSlide[] = [
-  {
-    id: '1',
-    badge: 'New Batch Alert',
-    headline: 'Ignite Your Engineering Career',
-    subheadline: 'Expert coaching for GATE, SSC-JE, and PSU exams with top-tier faculty.',
-    imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&auto=format&fit=crop&q=80',
-    ctaText: 'Explore Courses',
-    ctaLink: '/courses',
-    ctaText2: 'Download App',
-    ctaLink2: 'https://play.google.com/store/apps/details?id=co.iron.game',
-    stats: [
-      { value: '100k+', label: 'Aspirants' },
-      { value: '500+', label: 'Selections' },
-      { value: '4.8/5', label: 'App Rating' }
-    ],
-    order: 1,
-    active: true
-  },
-  {
-    id: '2',
-    badge: 'Limited Seats',
-    headline: 'GATE 2025 Crash Course',
-    subheadline: 'Limited seats available for our intensive 3-month preparation program.',
-    imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1600&auto=format&fit=crop&q=80',
-    ctaText: 'Enroll Now',
-    ctaLink: '/courses/gate-crash',
-    ctaText2: 'View Schedule',
-    ctaLink2: '/schedule',
-    stats: [
-      { value: '3 Months', label: 'Duration' },
-      { value: 'LIVE', label: 'Daily Classes' },
-      { value: '200+', label: 'Mock Tests' }
-    ],
-    order: 2,
-    active: true
-  }
-];
+const COLLECTION = 'heroSlides';
 
 export default function HeroSlides() {
-  const [slides, setSlides] = useState<HeroSlide[]>(initialSlides);
+  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
   const [statInput, setStatInput] = useState({ value: '', label: '' });
@@ -81,6 +47,24 @@ export default function HeroSlides() {
     order: 0,
     active: true
   });
+
+  const loadSlides = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<HeroSlide>(COLLECTION);
+      setSlides(data);
+    } catch (error) {
+      console.error('Failed to load hero slides', error);
+      setErrorMessage('Failed to load hero slides.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSlides();
+  }, []);
 
   const handleOpenModal = (slide?: HeroSlide) => {
     if (slide) {
@@ -128,35 +112,64 @@ export default function HeroSlides() {
     setEditingSlide(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingSlide) {
-      // TODO: connect to Firestore
-      setSlides(prev => prev.map(s => s.id === editingSlide.id ? { ...s, ...formData } as HeroSlide : s));
-    } else {
-      // TODO: connect to Firestore
-      const newSlide = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as HeroSlide;
-      setSlides(prev => [...prev, newSlide].sort((a, b) => a.order - b.order));
+    setErrorMessage(null);
+    try {
+      if (editingSlide) {
+        await updateItem<HeroSlide>(COLLECTION, editingSlide.id, formData);
+      } else {
+        await addItem<HeroSlide>(COLLECTION, formData as HeroSlide);
+      }
+      await loadSlides();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save hero slide', error);
+      setErrorMessage('Failed to save hero slide.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this hero slide?')) {
-      // TODO: connect to Firestore
-      setSlides(prev => prev.filter(s => s.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadSlides();
+      } catch (error) {
+        console.error('Failed to delete hero slide', error);
+        setErrorMessage('Failed to delete hero slide.');
+      }
     }
   };
 
-  const toggleStatus = (id: string) => {
-    // TODO: connect to Firestore
-    setSlides(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
+  const toggleStatus = async (slide: HeroSlide) => {
+    setErrorMessage(null);
+    try {
+      await updateItem<HeroSlide>(COLLECTION, slide.id, { active: !slide.active });
+      await loadSlides();
+    } catch (error) {
+      console.error('Failed to update slide status', error);
+      setErrorMessage('Failed to update slide status.');
+    }
   };
 
   const sortedSlides = [...slides].sort((a, b) => a.order - b.order);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Homepage Hero Slides</h1>
+            <p className="text-slate-500 mt-1">Configure the main promotional carousel on the homepage.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -170,6 +183,12 @@ export default function HeroSlides() {
           Add Slide
         </button>
       </div>
+
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
 
       <div className="admin-card">
         <div className="space-y-6">
@@ -238,8 +257,8 @@ export default function HeroSlides() {
 
                 <div className="flex items-center justify-between pt-8 mt-8 border-t border-slate-50">
                   <div className="flex gap-2">
-                    <button 
-                      onClick={() => toggleStatus(slide.id)}
+                    <button
+                      onClick={() => toggleStatus(slide)}
                       className={`btn-secondary text-xs px-4 ${slide.active ? 'text-slate-600' : 'text-game-teal'}`}
                     >
                       {slide.active ? 'Deactivate' : 'Activate'}

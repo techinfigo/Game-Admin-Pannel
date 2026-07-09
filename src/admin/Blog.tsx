@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  BookOpen, 
-  Edit2, 
-  Trash2, 
-  X, 
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  Search,
+  BookOpen,
+  Edit2,
+  Trash2,
+  X,
   User,
   Calendar,
   Image as ImageIcon,
@@ -20,44 +20,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BlogPost } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialPosts: BlogPost[] = [
-  {
-    id: '1',
-    title: 'How to Crack GATE in 6 Months',
-    slug: 'how-to-crack-gate-in-6-months',
-    category: 'Strategy',
-    coverImageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=60',
-    excerpt: 'A comprehensive guide for engineering students to prepare for GATE 2025 with a 6-month roadmap.',
-    content: 'Long content would go here...',
-    author: 'Admin',
-    authorRole: 'Founder & Mentor',
-    readTime: '8 min read',
-    publishedDate: '2026-07-01',
-    tags: ['GATE', 'Preparation', 'Roadmap'],
-    published: true,
-    featured: true
-  },
-  {
-    id: '2',
-    title: 'Top 10 PSU Recruitments through SSC-JE',
-    slug: 'top-10-psu-ssc-je',
-    category: 'Career',
-    coverImageUrl: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=60',
-    excerpt: 'Explore the best Public Sector Undertakings you can join after qualifying SSC-JE exam.',
-    content: 'Long content would go here...',
-    author: 'GAME Faculty',
-    authorRole: 'Senior Faculty',
-    readTime: '5 min read',
-    publishedDate: '2026-06-25',
-    tags: ['SSC-JE', 'Jobs', 'PSU'],
-    published: false,
-    featured: false
-  }
-];
+const COLLECTION = 'blog';
 
 export default function Blog() {
-  const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,6 +49,24 @@ export default function Blog() {
   });
 
   const [tagInput, setTagInput] = useState('');
+
+  const loadPosts = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<BlogPost>(COLLECTION);
+      setPosts(data);
+    } catch (error) {
+      console.error('Failed to load blog posts', error);
+      setErrorMessage('Failed to load blog posts.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPosts();
+  }, []);
 
   const handleOpenModal = (post?: BlogPost) => {
     if (post) {
@@ -124,38 +112,70 @@ export default function Blog() {
     setFormData(prev => ({ ...prev, tags: prev.tags?.filter(t => t !== tag) }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingPost) {
-      // TODO: connect to Firestore
-      setPosts(prev => prev.map(p => p.id === editingPost.id ? { ...p, ...formData } as BlogPost : p));
-    } else {
-      // TODO: connect to Firestore
-      const newPost = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9),
-        slug: formData.title?.toLowerCase().replace(/ /g, '-') || ''
-      } as BlogPost;
-      setPosts(prev => [newPost, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingPost) {
+        await updateItem<BlogPost>(COLLECTION, editingPost.id, formData);
+      } else {
+        const newPost = {
+          ...formData,
+          slug: formData.title?.toLowerCase().replace(/ /g, '-') || ''
+        } as BlogPost;
+        await addItem<BlogPost>(COLLECTION, newPost);
+      }
+      await loadPosts();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save blog post', error);
+      setErrorMessage('Failed to save blog post.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this blog post?')) {
-      // TODO: connect to Firestore
-      setPosts(prev => prev.filter(p => p.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadPosts();
+      } catch (error) {
+        console.error('Failed to delete blog post', error);
+        setErrorMessage('Failed to delete blog post.');
+      }
     }
   };
 
-  const togglePublish = (id: string) => {
-    // TODO: connect to Firestore
-    setPosts(prev => prev.map(p => p.id === id ? { ...p, published: !p.published } : p));
+  const togglePublish = async (post: BlogPost) => {
+    setErrorMessage(null);
+    try {
+      await updateItem<BlogPost>(COLLECTION, post.id, { published: !post.published });
+      await loadPosts();
+    } catch (error) {
+      console.error('Failed to update publish status', error);
+      setErrorMessage('Failed to update publish status.');
+    }
   };
 
   const filteredPosts = posts.filter(p => 
     p.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Blog Posts</h1>
+            <p className="text-slate-500 mt-1">Manage articles, news, and updates published on the GAME Academy blog.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -170,12 +190,18 @@ export default function Blog() {
         </button>
       </div>
 
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="admin-card">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <input 
-              type="text" 
-              placeholder="Search articles by title..." 
+            <input
+              type="text"
+              placeholder="Search articles by title..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-11"
@@ -184,6 +210,12 @@ export default function Blog() {
           </div>
         </div>
 
+        {filteredPosts.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+            <BookOpen className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">No blog posts found.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredPosts.map((post) => (
             <motion.div 
@@ -236,8 +268,8 @@ export default function Blog() {
                     <div className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {post.publishedDate}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => togglePublish(post.id)}
+                    <button
+                      onClick={() => togglePublish(post)}
                       className={`p-2 rounded-xl transition-all ${post.published ? 'text-green-500 hover:bg-green-50' : 'text-slate-400 hover:bg-slate-100'}`}
                       title={post.published ? 'Unpublish' : 'Publish'}
                     >
@@ -261,12 +293,13 @@ export default function Blog() {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
 
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
               onClick={handleCloseModal}

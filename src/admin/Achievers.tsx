@@ -3,40 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Search, Trophy, User, Edit2, Trash2, X, Image as ImageIcon, GraduationCap, Youtube, Video, Calendar, MapPin, Quote } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Achiever } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialAchievers: Achiever[] = [
-  {
-    id: '1',
-    type: 'GATE Topper',
-    name: 'Rahul Sharma',
-    exam: 'GATE 2024',
-    achievement: 'AIR 12',
-    college: 'IIT Ropar',
-    year: '2024',
-    youtubeUrl: 'https://youtube.com/shorts/xyz',
-    photoUrl: 'https://i.pravatar.cc/150?u=rahul',
-    quote: 'GAME Academy helped me stay consistent with my preparation.'
-  },
-  {
-    id: '2',
-    type: 'Job Selection',
-    name: 'Priya Singh',
-    exam: 'CPWD · 2023',
-    achievement: 'Junior Engineer (Civil)',
-    college: 'NIT Jaipur',
-    year: '2023',
-    youtubeUrl: '',
-    photoUrl: 'https://i.pravatar.cc/150?u=priya',
-    quote: 'The test series is highly accurate compared to the actual exam.'
-  }
-];
+const COLLECTION = 'achievers';
 
 export default function Achievers() {
-  const [achievers, setAchievers] = useState<Achiever[]>(initialAchievers);
+  const [achievers, setAchievers] = useState<Achiever[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAchiever, setEditingAchiever] = useState<Achiever | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +30,24 @@ export default function Achievers() {
     photoUrl: '',
     quote: ''
   });
+
+  const loadAchievers = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<Achiever>(COLLECTION);
+      setAchievers(data);
+    } catch (error) {
+      console.error('Failed to load achievers', error);
+      setErrorMessage('Failed to load achievers.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAchievers();
+  }, []);
 
   const handleOpenModal = (achiever?: Achiever) => {
     if (achiever) {
@@ -79,26 +75,33 @@ export default function Achievers() {
     setEditingAchiever(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingAchiever) {
-      // TODO: connect to Firestore
-      setAchievers(prev => prev.map(a => a.id === editingAchiever.id ? { ...a, ...formData } as Achiever : a));
-    } else {
-      // TODO: connect to Firestore
-      const newAchiever = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as Achiever;
-      setAchievers(prev => [newAchiever, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingAchiever) {
+        await updateItem<Achiever>(COLLECTION, editingAchiever.id, formData);
+      } else {
+        await addItem<Achiever>(COLLECTION, formData as Achiever);
+      }
+      await loadAchievers();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save achiever', error);
+      setErrorMessage('Failed to save achiever.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this achiever?')) {
-      // TODO: connect to Firestore
-      setAchievers(prev => prev.filter(a => a.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadAchievers();
+      } catch (error) {
+        console.error('Failed to delete achiever', error);
+        setErrorMessage('Failed to delete achiever.');
+      }
     }
   };
 
@@ -106,6 +109,22 @@ export default function Achievers() {
     a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     a.exam.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Achievers & Reviews</h1>
+            <p className="text-slate-500 mt-1">Showcase successful students and their testimonials.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -120,12 +139,18 @@ export default function Achievers() {
         </button>
       </div>
 
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="admin-card">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <input 
-              type="text" 
-              placeholder="Search achievers by name or exam..." 
+            <input
+              type="text"
+              placeholder="Search achievers by name or exam..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-11"
@@ -134,6 +159,12 @@ export default function Achievers() {
           </div>
         </div>
 
+        {filteredAchievers.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+            <Trophy className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">No achievers found.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAchievers.map((achiever) => (
             <motion.div 
@@ -210,6 +241,7 @@ export default function Achievers() {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
 
       <AnimatePresence>

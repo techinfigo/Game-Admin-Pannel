@@ -3,30 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Search, Megaphone, Calendar, Edit2, Trash2, X, Bell, CheckCircle2, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Announcement } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialAnnouncements: Announcement[] = [
-  {
-    id: '1',
-    title: 'New Batch Enrollment Started',
-    message: 'Enrollment for the Vision GATE 2027 batch has officially started. Early bird discounts available.',
-    date: '2026-07-05',
-    active: true
-  },
-  {
-    id: '2',
-    title: 'Server Maintenance Update',
-    message: 'The mobile app will be under maintenance on Sunday from 2 AM to 5 AM.',
-    date: '2026-07-01',
-    active: false
-  }
-];
+const COLLECTION = 'announcements';
 
 export default function Announcements() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,6 +25,24 @@ export default function Announcements() {
     date: new Date().toISOString().split('T')[0],
     active: true
   });
+
+  const loadAnnouncements = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<Announcement>(COLLECTION);
+      setAnnouncements(data);
+    } catch (error) {
+      console.error('Failed to load announcements', error);
+      setErrorMessage('Failed to load announcements.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
 
   const handleOpenModal = (announcement?: Announcement) => {
     if (announcement) {
@@ -59,38 +65,67 @@ export default function Announcements() {
     setEditingAnnouncement(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingAnnouncement) {
-      // TODO: connect to Firestore
-      setAnnouncements(prev => prev.map(a => a.id === editingAnnouncement.id ? { ...a, ...formData } as Announcement : a));
-    } else {
-      // TODO: connect to Firestore
-      const newAnnouncement = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as Announcement;
-      setAnnouncements(prev => [newAnnouncement, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingAnnouncement) {
+        await updateItem<Announcement>(COLLECTION, editingAnnouncement.id, formData);
+      } else {
+        await addItem<Announcement>(COLLECTION, formData as Announcement);
+      }
+      await loadAnnouncements();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save announcement', error);
+      setErrorMessage('Failed to save announcement.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this announcement?')) {
-      // TODO: connect to Firestore
-      setAnnouncements(prev => prev.filter(a => a.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadAnnouncements();
+      } catch (error) {
+        console.error('Failed to delete announcement', error);
+        setErrorMessage('Failed to delete announcement.');
+      }
     }
   };
 
-  const toggleStatus = (id: string) => {
-    // TODO: connect to Firestore
-    setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, active: !a.active } : a));
+  const toggleStatus = async (announcement: Announcement) => {
+    setErrorMessage(null);
+    try {
+      await updateItem<Announcement>(COLLECTION, announcement.id, { active: !announcement.active });
+      await loadAnnouncements();
+    } catch (error) {
+      console.error('Failed to update announcement status', error);
+      setErrorMessage('Failed to update announcement status.');
+    }
   };
 
   const filteredAnnouncements = announcements.filter(a => 
     a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     a.message.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Announcements</h1>
+            <p className="text-slate-500 mt-1">Broadcast important news and updates to all students.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -104,6 +139,12 @@ export default function Announcements() {
           New Announcement
         </button>
       </div>
+
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
 
       <div className="admin-card">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -133,8 +174,8 @@ export default function Announcements() {
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-2">
                   <h3 className="font-bold text-lg text-slate-900">{announcement.title}</h3>
-                  <button 
-                    onClick={() => toggleStatus(announcement.id)}
+                  <button
+                    onClick={() => toggleStatus(announcement)}
                     className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1 transition-colors ${
                       announcement.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
                     }`}

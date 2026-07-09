@@ -3,53 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Briefcase, 
-  Calendar, 
-  MapPin, 
-  ExternalLink, 
-  Edit2, 
-  Trash2, 
-  X, 
-  CheckCircle2, 
-  Clock, 
-  AlertCircle 
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  Search,
+  Briefcase,
+  Calendar,
+  MapPin,
+  ExternalLink,
+  Edit2,
+  Trash2,
+  X,
+  CheckCircle2,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { JobUpdate, JobStatus } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialJobs: JobUpdate[] = [
-  {
-    id: '1',
-    notification: 'SSC-JE 2026 Notification',
-    eligibility: 'B.E. / B.Tech / Diploma in CE/ME/EE',
-    branches: ['Civil', 'Mechanical', 'Electrical'],
-    startDate: '2026-08-01',
-    endDate: '2026-08-30',
-    status: 'Yet to start',
-    pdfLink: 'https://ssc.nic.in/notification',
-    usefulLinks: 'https://ssc.nic.in/apply',
-    recommendedCourse: 'https://gameacademy.in/ssc-je-batch'
-  },
-  {
-    id: '2',
-    notification: 'ISRO Scientist-C Recruitment',
-    eligibility: 'B.E. / B.Tech with 65% aggregate',
-    branches: ['Mechanical', 'Electronics', 'CS'],
-    startDate: '2026-06-15',
-    endDate: '2026-07-15',
-    status: 'Open',
-    pdfLink: 'https://isro.gov.in/advt',
-    usefulLinks: 'https://isro.gov.in/apply',
-    recommendedCourse: 'https://gameacademy.in/isro-crash-course'
-  }
-];
+const COLLECTION = 'jobUpdates';
 
 export default function JobUpdates() {
-  const [jobs, setJobs] = useState<JobUpdate[]>(initialJobs);
+  const [jobs, setJobs] = useState<JobUpdate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<JobUpdate | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,6 +45,24 @@ export default function JobUpdates() {
   });
 
   const [branchInput, setBranchInput] = useState('');
+
+  const loadJobs = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<JobUpdate>(COLLECTION);
+      setJobs(data);
+    } catch (error) {
+      console.error('Failed to load job updates', error);
+      setErrorMessage('Failed to load job updates.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadJobs();
+  }, []);
 
   const handleOpenModal = (job?: JobUpdate) => {
     if (job) {
@@ -114,26 +110,33 @@ export default function JobUpdates() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingJob) {
-      // TODO: connect to Firestore
-      setJobs(prev => prev.map(j => j.id === editingJob.id ? { ...j, ...formData } as JobUpdate : j));
-    } else {
-      // TODO: connect to Firestore
-      const newJob = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as JobUpdate;
-      setJobs(prev => [newJob, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingJob) {
+        await updateItem<JobUpdate>(COLLECTION, editingJob.id, formData);
+      } else {
+        await addItem<JobUpdate>(COLLECTION, formData as JobUpdate);
+      }
+      await loadJobs();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save job update', error);
+      setErrorMessage('Failed to save job update.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this job update?')) {
-      // TODO: connect to Firestore
-      setJobs(prev => prev.filter(j => j.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadJobs();
+      } catch (error) {
+        console.error('Failed to delete job update', error);
+        setErrorMessage('Failed to delete job update.');
+      }
     }
   };
 
@@ -160,6 +163,22 @@ export default function JobUpdates() {
     j.eligibility.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Job Updates</h1>
+            <p className="text-slate-500 mt-1">Publish latest job notifications and recruitment alerts.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -172,6 +191,12 @@ export default function JobUpdates() {
           Add Job Update
         </button>
       </div>
+
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
 
       <div className="admin-card">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">

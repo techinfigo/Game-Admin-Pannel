@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Video, 
-  Edit2, 
-  Trash2, 
-  X, 
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  Search,
+  Video,
+  Edit2,
+  Trash2,
+  X,
   Youtube,
   GraduationCap,
   PlayCircle,
@@ -22,36 +22,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { VideoLecture } from '../types';
+import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 
-const initialLectures: VideoLecture[] = [
-  {
-    id: '1',
-    title: 'How to Crack GATE 2025',
-    subtitle: 'Proven Strategy by Gaurav Babu Sir',
-    tag: 'GATE Strategy',
-    duration: '14:15',
-    views: '245k',
-    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    examTag: 'GATE',
-    description: 'Learn the most important topics in Engineering Mathematics that carry high weightage in GATE.',
-    thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg'
-  },
-  {
-    id: '2',
-    title: 'Basic Mechanics Intro',
-    subtitle: 'Concepts by Vikram Singh Sir',
-    tag: 'Basic Mechanics',
-    duration: '22:40',
-    views: '112k',
-    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    examTag: 'SSC-JE',
-    description: 'Live interactive session on Thermodynamics and Fluid Mechanics for SSC-JE aspirants.',
-    thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg'
-  }
-];
+const COLLECTION = 'videoLectures';
 
 export default function VideoLectures() {
-  const [lectures, setLectures] = useState<VideoLecture[]>(initialLectures);
+  const [lectures, setLectures] = useState<VideoLecture[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLecture, setEditingLecture] = useState<VideoLecture | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,6 +45,24 @@ export default function VideoLectures() {
     description: '',
     thumbnailUrl: ''
   });
+
+  const loadLectures = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await getAll<VideoLecture>(COLLECTION);
+      setLectures(data);
+    } catch (error) {
+      console.error('Failed to load video lectures', error);
+      setErrorMessage('Failed to load video lectures.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLectures();
+  }, []);
 
   const handleOpenModal = (lecture?: VideoLecture) => {
     if (lecture) {
@@ -94,26 +90,33 @@ export default function VideoLectures() {
     setEditingLecture(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingLecture) {
-      // TODO: connect to Firestore
-      setLectures(prev => prev.map(l => l.id === editingLecture.id ? { ...l, ...formData } as VideoLecture : l));
-    } else {
-      // TODO: connect to Firestore
-      const newLecture = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9)
-      } as VideoLecture;
-      setLectures(prev => [newLecture, ...prev]);
+    setErrorMessage(null);
+    try {
+      if (editingLecture) {
+        await updateItem<VideoLecture>(COLLECTION, editingLecture.id, formData);
+      } else {
+        await addItem<VideoLecture>(COLLECTION, formData as VideoLecture);
+      }
+      await loadLectures();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save video lecture', error);
+      setErrorMessage('Failed to save video lecture.');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this video lecture?')) {
-      // TODO: connect to Firestore
-      setLectures(prev => prev.filter(l => l.id !== id));
+      setErrorMessage(null);
+      try {
+        await deleteItem(COLLECTION, id);
+        await loadLectures();
+      } catch (error) {
+        console.error('Failed to delete video lecture', error);
+        setErrorMessage('Failed to delete video lecture.');
+      }
     }
   };
 
@@ -121,6 +124,22 @@ export default function VideoLectures() {
     l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     l.examTag.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Free Video Lectures</h1>
+            <p className="text-slate-500 mt-1">Manage YouTube video lectures categorized by examination types.</p>
+          </div>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -135,12 +154,18 @@ export default function VideoLectures() {
         </button>
       </div>
 
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="admin-card">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <input 
-              type="text" 
-              placeholder="Search by title or exam..." 
+            <input
+              type="text"
+              placeholder="Search by title or exam..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-11"
@@ -149,6 +174,12 @@ export default function VideoLectures() {
           </div>
         </div>
 
+        {filteredLectures.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+            <Video className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">No video lectures found.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredLectures.map((lecture) => (
             <motion.div 
@@ -230,6 +261,7 @@ export default function VideoLectures() {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
 
       <AnimatePresence>

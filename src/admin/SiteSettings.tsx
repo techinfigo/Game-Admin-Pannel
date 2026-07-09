@@ -3,48 +3,96 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Save, Globe, MessageCircle, Mail, Link as LinkIcon, Instagram, Youtube, Send, Facebook, MapPin, Linkedin, MessageSquare, Smartphone } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SiteSettings } from '../types';
+import { getSiteSettings, saveSiteSettings } from '../services/settingsService';
+
+const DEFAULT_SETTINGS: SiteSettings = {
+  phone: '+91 98765 43210',
+  whatsappNumber: '+91 98765 43210',
+  email: 'contact@gameacademy.in',
+  classplusPortalLink: 'https://web.classplusapp.com/login',
+  instagram: 'https://instagram.com/game_academy',
+  youtube: 'https://youtube.com/@game_academy',
+  telegram: 'https://t.me/game_academy',
+  facebook: 'https://facebook.com/gameacademy',
+  linkedin: '',
+  whatsappChannel: '',
+  androidAppLink: '',
+  iosAppLink: '',
+  address: '123, Tech Park, Hyderabad, India'
+};
 
 export default function SiteSettingsPage() {
-  const [settings, setSettings] = useState<SiteSettings>({
-    phone: '+91 98765 43210',
-    whatsappNumber: '+91 98765 43210',
-    email: 'contact@gameacademy.in',
-    classplusPortalLink: 'https://web.classplusapp.com/login',
-    instagram: 'https://instagram.com/game_academy',
-    youtube: 'https://youtube.com/@game_academy',
-    telegram: 'https://t.me/game_academy',
-    facebook: 'https://facebook.com/gameacademy',
-    linkedin: '',
-    whatsappChannel: '',
-    androidAppLink: '',
-    iosAppLink: '',
-    address: '123, Tech Park, Hyderabad, India'
-  });
-
+  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        const existing = await getSiteSettings();
+        if (isMounted && existing) {
+          setSettings(existing);
+        }
+      } catch (error) {
+        console.error('Failed to load site settings', error);
+        if (isMounted) {
+          setErrorMessage('Failed to load settings');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      // TODO: connect to Firestore
-      setIsSaving(false);
+    setErrorMessage(null);
+
+    try {
+      await saveSiteSettings(settings);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to save site settings', error);
+      setErrorMessage('Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setSettings(prev => ({ ...prev, [name]: value }));
   };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Site Settings</h1>
+          <p className="text-slate-500 mt-1">Manage global contact information and social links for GAME Academy.</p>
+        </div>
+        <div className="admin-card flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-game-teal rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl">
@@ -286,13 +334,22 @@ export default function SiteSettingsPage() {
 
         {/* Footer Actions */}
         <div className="flex items-center justify-end gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-slate-200">
+          {errorMessage && (
+            <motion.p
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-red-500 font-bold text-sm flex items-center gap-2"
+            >
+              ✕ {errorMessage}
+            </motion.p>
+          )}
           {showSuccess && (
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               className="text-game-teal font-bold text-sm flex items-center gap-2"
             >
-              ✓ Settings saved successfully
+              ✓ Settings saved
             </motion.p>
           )}
           <button 

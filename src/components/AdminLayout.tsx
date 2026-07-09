@@ -92,13 +92,13 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed lg:relative inset-y-0 left-0 z-50 w-72 bg-slate-900 border-r border-slate-800 transition-transform duration-300 transform shrink-0 ${
+        className={`fixed lg:relative inset-y-0 left-0 z-50 w-72 bg-[#020617] border-r border-white/5 transition-transform duration-300 transform shrink-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+          <div className="p-6 border-b border-white/5 flex items-center justify-between">
             <Link to="/admin" className="flex items-center justify-center flex-1 px-4">
               <img 
                 src="/src/assets/images/game_academy_logo_1783498289580.jpg" 
@@ -142,7 +142,7 @@ export default function AdminLayout() {
                   })}
                 </div>
                 {groupIdx < navGroups.length - 1 && (
-                  <div className="mx-4 h-px bg-slate-800/50 my-6" />
+                  <div className="mx-4 h-px bg-white/5 my-6" />
                 )}
               </div>
             ))}

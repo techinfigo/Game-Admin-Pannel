@@ -4,18 +4,18 @@
  */
 
 import React, { useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Settings, 
-  FileText, 
-  Briefcase, 
-  GraduationCap, 
-  Tag, 
-  Trophy, 
-  Megaphone, 
-  LogOut, 
-  Menu, 
+import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Settings,
+  FileText,
+  Briefcase,
+  GraduationCap,
+  Tag,
+  Trophy,
+  Megaphone,
+  LogOut,
+  Menu,
   X,
   Bell,
   User,
@@ -29,6 +29,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../context/AuthContext';
 
 const navGroups = [
   {
@@ -72,6 +73,13 @@ const navGroups = [
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
 
   const allItems = navGroups.flatMap(group => group.items);
 
@@ -150,7 +158,10 @@ export default function AdminLayout() {
 
           {/* Logout Section */}
           <div className="p-4 border-t border-slate-800">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all duration-200">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all duration-200"
+            >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Logout</span>
             </button>
@@ -182,7 +193,7 @@ export default function AdminLayout() {
             <div className="h-8 w-px bg-slate-100 mx-1"></div>
             <div className="flex items-center gap-3 pl-2">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-slate-900 leading-none">Super Admin</p>
+                <p className="text-sm font-bold text-slate-900 leading-none">{user?.email || 'Admin'}</p>
                 <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-tighter">Manage All Access</p>
               </div>
               <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden">

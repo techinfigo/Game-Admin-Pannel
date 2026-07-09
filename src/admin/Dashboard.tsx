@@ -12,7 +12,10 @@ import {
   Trophy, 
   Megaphone,
   ArrowUpRight,
-  Plus
+  Plus,
+  ShoppingBag,
+  UserCheck,
+  IndianRupee
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
@@ -24,6 +27,9 @@ const stats = [
   { label: 'Live Offers', value: 5, icon: Tag, color: 'bg-orange-500', path: '/admin/offers' },
   { label: 'Achievers', value: 250, icon: Trophy, color: 'bg-game-gold', path: '/admin/achievers' },
   { label: 'Announcements', value: 12, icon: Megaphone, color: 'bg-red-500', path: '/admin/announcements' },
+  { label: 'Premium PDFs', value: 45, icon: ShoppingBag, color: 'bg-indigo-500', path: '/admin/pdf-store' },
+  { label: 'Total Students', value: '1.2k', icon: UserCheck, color: 'bg-emerald-500', path: '/admin/students' },
+  { label: 'Total Revenue', value: '₹4.2L', icon: IndianRupee, color: 'bg-pink-500', path: '/admin/transactions' },
 ];
 
 export default function Dashboard() {

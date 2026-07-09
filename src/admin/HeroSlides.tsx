@@ -295,7 +295,7 @@ export default function HeroSlides() {
               initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }}
               className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden relative z-10 max-h-[90vh] flex flex-col"
             >
-              <div className="p-8 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between shrink-0 sticky top-0 bg-white z-20">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900">{editingSlide ? 'Edit Hero Slide' : 'Add New Slide'}</h2>
                   <p className="text-sm text-slate-500 mt-1">Configure visuals and calls to action for the homepage.</p>
@@ -303,7 +303,7 @@ export default function HeroSlides() {
                 <button onClick={handleCloseModal} className="p-3 hover:bg-slate-100 rounded-2xl transition-colors"><X className="w-6 h-6 text-slate-500" /></button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-8 space-y-8 overflow-y-auto max-h-[75vh]">
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8 scroll-smooth">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {/* Visual Context */}
                   <div className="sm:col-span-2 space-y-4">

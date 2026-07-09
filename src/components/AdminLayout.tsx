@@ -23,7 +23,10 @@ import {
   BookOpen,
   Users,
   Video,
-  MonitorPlay
+  MonitorPlay,
+  ShoppingBag,
+  UserCheck,
+  CreditCard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -41,6 +44,9 @@ const navItems = [
   { path: '/admin/faculty', icon: Users, label: 'Faculty / Educators' },
   { path: '/admin/lectures', icon: Video, label: 'Video Lectures' },
   { path: '/admin/hero', icon: MonitorPlay, label: 'Hero Slides' },
+  { path: '/admin/pdf-store', icon: ShoppingBag, label: 'PDF Store' },
+  { path: '/admin/students', icon: UserCheck, label: 'Students' },
+  { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
 ];
 
 export default function AdminLayout() {
@@ -48,7 +54,7 @@ export default function AdminLayout() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="h-screen bg-slate-50 flex overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {!isSidebarOpen && (
@@ -56,7 +62,7 @@ export default function AdminLayout() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
             onClick={() => setIsSidebarOpen(true)}
           />
         )}
@@ -64,7 +70,7 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-slate-900 border-r border-slate-800 transition-transform duration-300 transform ${
+        className={`fixed lg:relative inset-y-0 left-0 z-50 w-72 bg-slate-900 border-r border-slate-800 transition-transform duration-300 transform shrink-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -88,7 +94,7 @@ export default function AdminLayout() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+          <nav className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (

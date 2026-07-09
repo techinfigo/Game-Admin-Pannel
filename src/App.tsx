@@ -21,6 +21,9 @@ const Blog = React.lazy(() => import('./admin/Blog'));
 const Faculty = React.lazy(() => import('./admin/Faculty'));
 const VideoLectures = React.lazy(() => import('./admin/VideoLectures'));
 const HeroSlides = React.lazy(() => import('./admin/HeroSlides'));
+const PdfStore = React.lazy(() => import('./admin/PdfStore'));
+const Students = React.lazy(() => import('./admin/Students'));
+const Transactions = React.lazy(() => import('./admin/Transactions'));
 
 const Loading = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -97,6 +100,21 @@ export default function App() {
           <Route path="hero" element={
             <React.Suspense fallback={<Loading />}>
               <HeroSlides />
+            </React.Suspense>
+          } />
+          <Route path="pdf-store" element={
+            <React.Suspense fallback={<Loading />}>
+              <PdfStore />
+            </React.Suspense>
+          } />
+          <Route path="students" element={
+            <React.Suspense fallback={<Loading />}>
+              <Students />
+            </React.Suspense>
+          } />
+          <Route path="transactions" element={
+            <React.Suspense fallback={<Loading />}>
+              <Transactions />
             </React.Suspense>
           } />
         </Route>

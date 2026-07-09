@@ -186,4 +186,44 @@ export interface DashboardStats {
   offers: number;
   achievers: number;
   announcements: number;
+  pdfs: number;
+  students: number;
+  revenue: number;
+}
+
+export interface PdfItem {
+  id: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  examTag: string;
+  category: string;
+  fileUrl: string;
+  fileName: string;
+  isFree: boolean;
+  price: number;
+  pageCount: number;
+  previewPages: number;
+  published: boolean;
+  createdAt: string;
+}
+
+export interface Student {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  joinedAt: string;
+  purchasedCount: number;
+}
+
+export interface Transaction {
+  id: string;
+  studentName: string;
+  studentPhone: string;
+  pdfTitle: string;
+  amount: number;
+  paymentId: string;
+  status: 'success' | 'failed' | 'pending';
+  createdAt: string;
 }

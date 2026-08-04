@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Course } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
+import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'courses';
 
@@ -547,16 +548,12 @@ export default function Courses() {
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <label className="label-text">Course Banner URL</label>
-                      <div className="relative">
-                        <input 
-                          type="url" 
-                          value={formData.imageUrl}
-                          onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                          className="input-field pl-10" placeholder="https://..." required 
-                        />
-                        <ImageIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      </div>
+                      <ImageUploadField
+                        label="Course Banner"
+                        value={formData.imageUrl}
+                        onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                        folder="courses"
+                      />
                     </div>
 
                     <div>

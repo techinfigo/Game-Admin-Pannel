@@ -19,12 +19,12 @@ import {
   ExternalLink,
   DollarSign,
   Tag as TagIcon,
-  Image as ImageIcon,
   Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FreeResource } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
+import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'resources';
 
@@ -372,16 +372,12 @@ export default function FreeResources() {
                     </div>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="label-text">Thumbnail Image URL</label>
-                    <div className="relative">
-                      <input 
-                        type="url" 
-                        value={formData.image}
-                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                        className="input-field pl-10" placeholder="https://images.unsplash.com/..." 
-                      />
-                      <ImageIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    </div>
+                    <ImageUploadField
+                      label="Thumbnail Image"
+                      value={formData.image}
+                      onChange={(url) => setFormData({ ...formData, image: url })}
+                      folder="resources"
+                    />
                   </div>
                 </div>
 

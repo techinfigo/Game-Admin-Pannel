@@ -23,6 +23,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { HeroSlide } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
+import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'heroSlides';
 
@@ -358,12 +359,11 @@ export default function HeroSlides() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="label-text">Background Image URL</label>
-                        <input 
-                          type="url" 
+                        <ImageUploadField
+                          label="Background Image"
                           value={formData.imageUrl}
-                          onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                          className="input-field" placeholder="https://..." required 
+                          onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                          folder="hero"
                         />
                       </div>
                     </div>

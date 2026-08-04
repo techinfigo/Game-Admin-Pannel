@@ -20,6 +20,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Faculty } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
+import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'faculty';
 
@@ -325,12 +326,11 @@ export default function FacultyPage() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="label-text">Profile Photo URL</label>
-                        <input 
-                          type="url" 
+                        <ImageUploadField
+                          label="Profile Photo"
                           value={formData.photoUrl}
-                          onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                          className="input-field" placeholder="https://..." required 
+                          onChange={(url) => setFormData({ ...formData, photoUrl: url })}
+                          folder="faculty"
                         />
                       </div>
                     </div>

@@ -15,7 +15,6 @@ import {
   GraduationCap,
   PlayCircle,
   ExternalLink,
-  Image as ImageIcon,
   Clock,
   Eye,
   Tag as TagIcon
@@ -23,6 +22,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { VideoLecture } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
+import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'videoLectures';
 
@@ -350,16 +350,12 @@ export default function VideoLectures() {
                     </div>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="label-text">Thumbnail URL (Optional)</label>
-                    <div className="relative">
-                      <input 
-                        type="url" 
-                        value={formData.thumbnailUrl}
-                        onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                        className="input-field pl-10" placeholder="Custom image URL..." 
-                      />
-                      <ImageIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    </div>
+                    <ImageUploadField
+                      label="Thumbnail (Optional)"
+                      value={formData.thumbnailUrl}
+                      onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
+                      folder="videos"
+                    />
                     <p className="text-[10px] text-slate-400 mt-1">If left blank, YouTube auto-thumbnail will be used.</p>
                   </div>
                   <div className="md:col-span-2">

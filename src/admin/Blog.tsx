@@ -13,7 +13,6 @@ import {
   X,
   User,
   Calendar,
-  Image as ImageIcon,
   CheckCircle2,
   Clock,
   Eye
@@ -21,6 +20,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { BlogPost } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
+import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'blog';
 
@@ -362,16 +362,12 @@ export default function Blog() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="label-text">Cover Image URL</label>
-                    <div className="relative">
-                      <input 
-                        type="url" 
-                        value={formData.coverImageUrl}
-                        onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
-                        className="input-field pl-10" placeholder="https://images.unsplash.com/..." required 
-                      />
-                      <ImageIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    </div>
+                    <ImageUploadField
+                      label="Cover Image"
+                      value={formData.coverImageUrl}
+                      onChange={(url) => setFormData({ ...formData, coverImageUrl: url })}
+                      folder="blog"
+                    />
                   </div>
                   <div className="md:col-span-2">
                     <label className="label-text">Full Content (Markdown/HTML supported)</label>

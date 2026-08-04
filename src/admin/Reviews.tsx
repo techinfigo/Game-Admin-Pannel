@@ -19,6 +19,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Review } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
+import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'reviews';
 
@@ -376,16 +377,12 @@ export default function Reviews() {
                     Student Photo
                   </div>
                   <div>
-                    <label className="label-text">Photo URL (Optional)</label>
-                    <div className="relative">
-                      <input 
-                        type="url" 
-                        value={formData.photoUrl}
-                        onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                        className="input-field pl-10" placeholder="https://..." 
-                      />
-                      <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    </div>
+                    <ImageUploadField
+                      label="Photo (Optional)"
+                      value={formData.photoUrl}
+                      onChange={(url) => setFormData({ ...formData, photoUrl: url })}
+                      folder="reviews"
+                    />
                   </div>
                 </div>
 

@@ -90,3 +90,23 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
     throw error;
   }
 }
+
+export async function uploadPdf(file: File): Promise<{ fileUrl: string; fileName: string; pageCount?: number }> {
+  if (file.type !== 'application/pdf') {
+    throw new Error('Only PDF files are allowed.');
+  }
+
+  try {
+    const timestamp = Date.now();
+    const path = `pdfs/${timestamp}-${sanitizeFileName(file.name)}`;
+    const storageRef = ref(storage, path);
+
+    await uploadBytes(storageRef, file);
+    const fileUrl = await getDownloadURL(storageRef);
+
+    return { fileUrl, fileName: file.name, pageCount: undefined };
+  } catch (error) {
+    console.error('Failed to upload PDF', error);
+    throw error;
+  }
+}

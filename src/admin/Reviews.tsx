@@ -382,6 +382,7 @@ export default function Reviews() {
                       value={formData.photoUrl}
                       onChange={(url) => setFormData({ ...formData, photoUrl: url })}
                       folder="reviews"
+                      hint="Recommended: 300 × 300 px (square avatar)"
                     />
                   </div>
                 </div>

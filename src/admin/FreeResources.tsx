@@ -377,6 +377,7 @@ export default function FreeResources() {
                       value={formData.image}
                       onChange={(url) => setFormData({ ...formData, image: url })}
                       folder="resources"
+                      hint="Recommended: 600 × 400 px (3:2 thumbnail)"
                     />
                   </div>
                 </div>

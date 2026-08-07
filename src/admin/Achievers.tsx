@@ -348,6 +348,7 @@ export default function Achievers() {
                         value={formData.photoUrl}
                         onChange={(url) => setFormData({ ...formData, photoUrl: url })}
                         folder="achievers"
+                        hint="Recommended: 600 × 600 px (square, face centred)"
                       />
                     </div>
                   </div>

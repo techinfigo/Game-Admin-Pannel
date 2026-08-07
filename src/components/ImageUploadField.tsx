@@ -13,9 +13,10 @@ interface ImageUploadFieldProps {
   onChange: (newUrl: string) => void;
   folder: string;
   renderPreview?: (value: string) => React.ReactNode;
+  hint?: string;
 }
 
-export default function ImageUploadField({ label, value, onChange, folder, renderPreview }: ImageUploadFieldProps) {
+export default function ImageUploadField({ label, value, onChange, folder, renderPreview, hint }: ImageUploadFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +78,7 @@ export default function ImageUploadField({ label, value, onChange, folder, rende
               </>
             )}
           </button>
+          {hint && <p className="text-xs text-slate-400">{hint}</p>}
           <div className="relative">
             <input
               type="url"

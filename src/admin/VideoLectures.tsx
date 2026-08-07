@@ -365,6 +365,7 @@ export default function VideoLectures() {
                       value={formData.thumbnailUrl}
                       onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
                       folder="videos"
+                      hint="Optional — auto-pulled from YouTube. Custom: 1280 × 720 px"
                     />
                     <p className="text-[10px] text-slate-400 mt-1">If left blank, YouTube auto-thumbnail will be used.</p>
                   </div>

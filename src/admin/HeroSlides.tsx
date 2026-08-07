@@ -364,6 +364,7 @@ export default function HeroSlides() {
                           value={formData.imageUrl}
                           onChange={(url) => setFormData({ ...formData, imageUrl: url })}
                           folder="hero"
+                          hint="Recommended: 1920 × 550 px (wide banner, keep text centred)"
                         />
                       </div>
                     </div>

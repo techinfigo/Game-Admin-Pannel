@@ -308,6 +308,7 @@ export default function Offers() {
                       value={formData.imageUrl}
                       onChange={(url) => setFormData({ ...formData, imageUrl: url })}
                       folder="offers"
+                      hint="Recommended: 1200 × 600 px (landscape, keep text centred)"
                     />
                   </div>
                   <div>

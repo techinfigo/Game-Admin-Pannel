@@ -367,6 +367,7 @@ export default function Blog() {
                       value={formData.coverImageUrl}
                       onChange={(url) => setFormData({ ...formData, coverImageUrl: url })}
                       folder="blog"
+                      hint="Recommended: 1200 × 675 px (16:9 cover)"
                     />
                   </div>
                   <div className="md:col-span-2">

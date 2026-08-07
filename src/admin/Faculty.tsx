@@ -331,6 +331,7 @@ export default function FacultyPage() {
                           value={formData.photoUrl}
                           onChange={(url) => setFormData({ ...formData, photoUrl: url })}
                           folder="faculty"
+                          hint="Recommended: 800 × 1000 px (portrait)"
                         />
                       </div>
                     </div>

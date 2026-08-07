@@ -26,6 +26,16 @@ import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'videoLectures';
 
+function extractYoutubeId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+}
+
+function getYoutubeThumbnail(url: string): string | null {
+  const id = extractYoutubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+}
+
 export default function VideoLectures() {
   const [lectures, setLectures] = useState<VideoLecture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -188,10 +198,10 @@ export default function VideoLectures() {
               className="group admin-card p-0 overflow-hidden hover:border-game-teal transition-all duration-300 flex flex-col"
             >
               <div className="aspect-video relative overflow-hidden bg-slate-900">
-                <img 
-                  src={lecture.thumbnailUrl || `https://img.youtube.com/vi/${lecture.youtubeUrl.split('v=')[1]?.split('&')[0]}/maxresdefault.jpg`} 
-                  alt={lecture.title} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80" 
+                <img
+                  src={lecture.thumbnailUrl || getYoutubeThumbnail(lecture.youtubeUrl) || 'https://placehold.co/480x270?text=No+Thumbnail'}
+                  alt={lecture.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <PlayCircle className="w-12 h-12 text-white opacity-60 group-hover:opacity-100 transition-opacity" />

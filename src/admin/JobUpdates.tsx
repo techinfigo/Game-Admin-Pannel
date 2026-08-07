@@ -46,12 +46,26 @@ export default function JobUpdates() {
 
   const [branchInput, setBranchInput] = useState('');
 
+  const sortJobsNewestFirst = (list: JobUpdate[]) => {
+    return [...list]
+      .map((job, index) => ({ job, index }))
+      .sort((a, b) => {
+        const aTime = a.job.createdAt ? new Date(a.job.createdAt).getTime() : null;
+        const bTime = b.job.createdAt ? new Date(b.job.createdAt).getTime() : null;
+        if (aTime !== null && bTime !== null) return bTime - aTime;
+        if (aTime !== null) return -1;
+        if (bTime !== null) return 1;
+        return b.index - a.index;
+      })
+      .map(({ job }) => job);
+  };
+
   const loadJobs = async () => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
       const data = await getAll<JobUpdate>(COLLECTION);
-      setJobs(data);
+      setJobs(sortJobsNewestFirst(data));
     } catch (error) {
       console.error('Failed to load job updates', error);
       setErrorMessage('Failed to load job updates.');
@@ -117,7 +131,7 @@ export default function JobUpdates() {
       if (editingJob) {
         await updateItem<JobUpdate>(COLLECTION, editingJob.id, formData);
       } else {
-        await addItem<JobUpdate>(COLLECTION, formData as JobUpdate);
+        await addItem<JobUpdate>(COLLECTION, { ...formData, createdAt: new Date().toISOString() } as JobUpdate);
       }
       await loadJobs();
       handleCloseModal();

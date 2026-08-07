@@ -49,6 +49,7 @@ export interface JobUpdate {
   pdfLink: string;
   usefulLinks: string;
   recommendedCourse: string;
+  createdAt?: string;
 }
 
 export interface Course {

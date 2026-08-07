@@ -33,6 +33,26 @@ import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'courses';
 
+const isRelativeImagePath = (url?: string) => !!url && url.startsWith('/');
+
+const getInitials = (title?: string) => {
+  if (!title) return '?';
+  return title.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('');
+};
+
+function CourseImagePlaceholder({ title, compact = false }: { title?: string; compact?: boolean }) {
+  return (
+    <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center gap-1 text-slate-400">
+      <span className={compact ? 'text-sm font-bold text-slate-300' : 'text-2xl font-bold text-slate-300'}>
+        {getInitials(title)}
+      </span>
+      <span className={`font-bold uppercase tracking-wide text-center leading-tight ${compact ? 'text-[7px]' : 'text-[9px]'}`}>
+        Image on website
+      </span>
+    </div>
+  );
+}
+
 export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -236,15 +256,19 @@ export default function Courses() {
               className="group border border-slate-100 rounded-3xl overflow-hidden hover:border-game-teal transition-all duration-300"
             >
               <div className="aspect-video relative overflow-hidden">
-                <img 
-                  src={course.imageUrl} 
-                  alt={course.title} 
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=No+Image';
-                  }}
-                />
+                {isRelativeImagePath(course.imageUrl) ? (
+                  <CourseImagePlaceholder title={course.title} />
+                ) : (
+                  <img
+                    src={course.imageUrl}
+                    alt={course.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=No+Image';
+                    }}
+                  />
+                )}
                 <div className="absolute top-4 left-4 flex flex-col gap-2">
                   <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-game-teal text-[10px] font-bold rounded-lg uppercase shadow-sm">
                     {course.tag}
@@ -553,6 +577,13 @@ export default function Courses() {
                         value={formData.imageUrl}
                         onChange={(url) => setFormData({ ...formData, imageUrl: url })}
                         folder="courses"
+                        renderPreview={(value) =>
+                          isRelativeImagePath(value) ? (
+                            <CourseImagePlaceholder title={formData.title} compact />
+                          ) : (
+                            <img src={value} alt="Course Banner" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                          )
+                        }
                       />
                     </div>
 

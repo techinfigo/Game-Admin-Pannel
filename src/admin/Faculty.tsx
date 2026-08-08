@@ -219,11 +219,14 @@ export default function FacultyPage() {
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border-2 border-white shadow-lg">
-                    <img 
-                      src={member.photoUrl || `https://ui-avatars.com/api/?name=${member.name}&background=0d9488&color=fff`} 
-                      alt={member.name} 
+                    <img
+                      src={member.photoUrl || `https://ui-avatars.com/api/?name=${member.name}&background=0d9488&color=fff`}
+                      alt={member.name}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${member.name}&background=0d9488&color=fff`;
+                      }}
                     />
                   </div>
                   <div>

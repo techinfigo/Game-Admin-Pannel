@@ -47,17 +47,16 @@ export default function JobUpdates() {
   const [branchInput, setBranchInput] = useState('');
 
   const sortJobsNewestFirst = (list: JobUpdate[]) => {
-    return [...list]
-      .map((job, index) => ({ job, index }))
-      .sort((a, b) => {
-        const aTime = a.job.createdAt ? new Date(a.job.createdAt).getTime() : null;
-        const bTime = b.job.createdAt ? new Date(b.job.createdAt).getTime() : null;
-        if (aTime !== null && bTime !== null) return bTime - aTime;
-        if (aTime !== null) return -1;
-        if (bTime !== null) return 1;
-        return b.index - a.index;
-      })
-      .map(({ job }) => job);
+    return [...list].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : null;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : null;
+      if (aTime !== null && bTime !== null) return bTime - aTime;
+      if (aTime !== null) return -1;
+      if (bTime !== null) return 1;
+      // Neither job has a createdAt (legacy data) — fall back to a stable
+      // order keyed on the document id instead of Firestore's unordered fetch position.
+      return a.id.localeCompare(b.id);
+    });
   };
 
   const loadJobs = async () => {
@@ -78,23 +77,28 @@ export default function JobUpdates() {
     loadJobs();
   }, []);
 
+  const emptyJobForm: Partial<JobUpdate> = {
+    notification: '',
+    eligibility: '',
+    branches: [],
+    startDate: '',
+    endDate: '',
+    status: 'Yet to start',
+    pdfLink: '',
+    usefulLinks: '',
+    recommendedCourse: ''
+  };
+
   const handleOpenModal = (job?: JobUpdate) => {
     if (job) {
       setEditingJob(job);
-      setFormData(job);
+      // Merge onto the full field template so every field (including
+      // startDate/endDate) is guaranteed to be pre-filled, even for
+      // legacy documents missing a field — nothing gets dropped on save.
+      setFormData({ ...emptyJobForm, ...job });
     } else {
       setEditingJob(null);
-      setFormData({
-        notification: '',
-        eligibility: '',
-        branches: [],
-        startDate: '',
-        endDate: '',
-        status: 'Yet to start',
-        pdfLink: '',
-        usefulLinks: '',
-        recommendedCourse: ''
-      });
+      setFormData(emptyJobForm);
     }
     setIsModalOpen(true);
   };

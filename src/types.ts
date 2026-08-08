@@ -75,6 +75,7 @@ export interface Course {
   liveCount: string;     // e.g. "350"
   features: string[];
   enrollLink: string;    // e.g. https://courses.gameacademy.in/wlp/...
+  createdAt?: string;
 }
 
 export interface Offer {

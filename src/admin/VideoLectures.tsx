@@ -201,10 +201,14 @@ export default function VideoLectures() {
                 <img
                   src={lecture.thumbnailUrl || getYoutubeThumbnail(lecture.youtubeUrl) || 'https://placehold.co/480x270?text=No+Thumbnail'}
                   alt={lecture.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://placehold.co/480x270?text=No+Thumbnail';
+                  }}
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <PlayCircle className="w-12 h-12 text-white opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <PlayCircle className="w-12 h-12 text-white opacity-50 group-hover:opacity-90 transition-opacity drop-shadow-lg" />
                 </div>
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                   <span className="px-2 py-0.5 bg-game-teal text-white text-[9px] font-bold uppercase rounded-md shadow-lg flex items-center gap-1.5">

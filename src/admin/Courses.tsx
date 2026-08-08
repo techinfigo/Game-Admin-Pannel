@@ -53,6 +53,18 @@ function CourseImagePlaceholder({ title, compact = false }: { title?: string; co
   );
 }
 
+function courseSortKey(course: Course): number {
+  return course.createdAt ? new Date(course.createdAt).getTime() : 0;
+}
+
+function sortCoursesStable(list: Course[]): Course[] {
+  return [...list].sort((a, b) => {
+    const diff = courseSortKey(a) - courseSortKey(b);
+    if (diff !== 0) return diff;
+    return a.id.localeCompare(b.id);
+  });
+}
+
 export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -90,7 +102,7 @@ export default function Courses() {
     setErrorMessage(null);
     try {
       const data = await getAll<Course>(COLLECTION);
-      setCourses(data);
+      setCourses(sortCoursesStable(data));
     } catch (error) {
       console.error('Failed to load courses', error);
       setErrorMessage('Failed to load courses.');
@@ -164,7 +176,7 @@ export default function Courses() {
       if (editingCourse) {
         await updateItem<Course>(COLLECTION, editingCourse.id, formData);
       } else {
-        await addItem<Course>(COLLECTION, formData as Course);
+        await addItem<Course>(COLLECTION, { ...formData, createdAt: new Date().toISOString() } as Course);
       }
       await loadCourses();
       handleCloseModal();

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import { useBranding } from '../hooks/useBranding';
 
 const navGroups = [
   {
@@ -75,6 +76,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { logoUrl } = useBranding();
 
   const handleLogout = async () => {
     await logout();
@@ -108,9 +110,9 @@ export default function AdminLayout() {
           {/* Logo Section */}
           <div className="p-6 border-b border-white/5 flex items-center justify-between">
             <Link to="/admin" className="flex items-center justify-center flex-1 px-4">
-              <img 
-                src="/src/assets/images/game_academy_logo_1783498289580.jpg" 
-                alt="GAME Academy Logo" 
+              <img
+                src={logoUrl || "/src/assets/images/game_academy_logo_1783498289580.jpg"}
+                alt="GAME Academy Logo"
                 className="max-h-16 w-auto object-contain rounded-lg"
                 referrerPolicy="no-referrer"
               />

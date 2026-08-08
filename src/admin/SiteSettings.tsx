@@ -4,12 +4,15 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Save, Globe, MessageCircle, Mail, Link as LinkIcon, Instagram, Youtube, Send, Facebook, MapPin, Linkedin, MessageSquare, Smartphone } from 'lucide-react';
+import { Save, Globe, MessageCircle, Mail, Link as LinkIcon, Instagram, Youtube, Send, Facebook, MapPin, Linkedin, MessageSquare, Smartphone, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SiteSettings } from '../types';
 import { getSiteSettings, saveSiteSettings } from '../services/settingsService';
+import ImageUploadField from '../components/ImageUploadField';
 
 const DEFAULT_SETTINGS: SiteSettings = {
+  logoUrl: '',
+  faviconUrl: '',
   phone: '+91 98765 43210',
   whatsappNumber: '+91 98765 43210',
   email: 'contact@gameacademy.in',
@@ -102,6 +105,34 @@ export default function SiteSettingsPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Branding Section */}
+        <section className="admin-card">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-game-gold/10 rounded-xl flex items-center justify-center text-game-gold">
+              <ImageIcon className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-800">Branding</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ImageUploadField
+              label="Company Logo"
+              value={settings.logoUrl}
+              onChange={(url) => setSettings(prev => ({ ...prev, logoUrl: url }))}
+              folder="branding"
+              hint="Recommended: 400 × 120 px (transparent PNG)"
+            />
+
+            <ImageUploadField
+              label="Favicon"
+              value={settings.faviconUrl}
+              onChange={(url) => setSettings(prev => ({ ...prev, faviconUrl: url }))}
+              folder="branding"
+              hint="Recommended: 64 × 64 px square (PNG)"
+            />
+          </div>
+        </section>
+
         {/* Contact Info Section */}
         <section className="admin-card">
           <div className="flex items-center gap-3 mb-6">

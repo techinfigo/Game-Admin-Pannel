@@ -4,6 +4,8 @@
  */
 
 export interface SiteSettings {
+  logoUrl: string;
+  faviconUrl: string;
   phone: string;
   whatsappNumber: string;
   email: string;

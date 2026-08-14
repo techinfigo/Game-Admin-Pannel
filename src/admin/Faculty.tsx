@@ -24,6 +24,50 @@ import ImageUploadField from '../components/ImageUploadField';
 
 const COLLECTION = 'faculty';
 
+// Seeded faculty photos point at files that only exist in the website project
+// (e.g. "/faculty/aditya-shukla-sir.png" or "aditya-shukla-sir.png"), so they
+// 404 here. Anything that isn't an absolute/remote URL is treated as such.
+const isWebsiteLocalPath = (url?: string) =>
+  !!url && !/^(https?:|data:|blob:)/i.test(url.trim());
+
+const getInitials = (name?: string) => {
+  if (!name) return '?';
+  return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('');
+};
+
+function FacultyInitialsAvatar({ name, compact = false }: { name?: string; compact?: boolean }) {
+  return (
+    <div className="w-full h-full rounded-full bg-game-teal/10 flex items-center justify-center">
+      <span className={`font-bold text-game-teal ${compact ? 'text-xs' : 'text-2xl'}`}>
+        {getInitials(name)}
+      </span>
+    </div>
+  );
+}
+
+/** Shows the photo when it's a real http(s) URL, otherwise (or on load failure) initials. */
+function FacultyAvatar({ name, photoUrl, compact = false }: { name?: string; photoUrl?: string; compact?: boolean }) {
+  const [hasFailed, setHasFailed] = useState(false);
+
+  useEffect(() => {
+    setHasFailed(false);
+  }, [photoUrl]);
+
+  if (!photoUrl || isWebsiteLocalPath(photoUrl) || hasFailed) {
+    return <FacultyInitialsAvatar name={name} compact={compact} />;
+  }
+
+  return (
+    <img
+      src={photoUrl}
+      alt={name}
+      referrerPolicy="no-referrer"
+      className="w-full h-full object-cover"
+      onError={() => setHasFailed(true)}
+    />
+  );
+}
+
 export default function FacultyPage() {
   const [faculty, setFaculty] = useState<Faculty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -219,15 +263,7 @@ export default function FacultyPage() {
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border-2 border-white shadow-lg">
-                    <img
-                      src={member.photoUrl || `https://ui-avatars.com/api/?name=${member.name}&background=0d9488&color=fff`}
-                      alt={member.name}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${member.name}&background=0d9488&color=fff`;
-                      }}
-                    />
+                    <FacultyAvatar name={member.name} photoUrl={member.photoUrl} />
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 text-lg leading-tight line-clamp-1">{member.name}</h3>
@@ -335,6 +371,7 @@ export default function FacultyPage() {
                           onChange={(url) => setFormData({ ...formData, photoUrl: url })}
                           folder="faculty"
                           hint="Recommended: 800 × 1000 px (portrait)"
+                          renderPreview={(value) => <FacultyAvatar name={formData.name} photoUrl={value} compact />}
                         />
                       </div>
                     </div>

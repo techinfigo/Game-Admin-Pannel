@@ -24,6 +24,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { HeroSlide } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import ImageUploadField from '../components/ImageUploadField';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 10;
 
 const COLLECTION = 'heroSlides';
 
@@ -156,6 +160,8 @@ export default function HeroSlides() {
 
   const sortedSlides = [...slides].sort((a, b) => a.order - b.order);
 
+  const { pagedItems: pagedSlides, currentPage, totalPages, setPage } = usePagination(sortedSlides, PAGE_SIZE);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -193,7 +199,7 @@ export default function HeroSlides() {
 
       <div className="admin-card">
         <div className="space-y-6">
-          {sortedSlides.map((slide) => (
+          {pagedSlides.map((slide) => (
             <motion.div 
               key={slide.id}
               layout
@@ -301,6 +307,8 @@ export default function HeroSlides() {
             </div>
           )}
         </div>
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

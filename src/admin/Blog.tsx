@@ -21,6 +21,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { BlogPost } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import ImageUploadField from '../components/ImageUploadField';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 10;
 
 const COLLECTION = 'blog';
 
@@ -157,9 +161,11 @@ export default function Blog() {
     }
   };
 
-  const filteredPosts = posts.filter(p => 
+  const filteredPosts = posts.filter(p =>
     p.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const { pagedItems: pagedPosts, currentPage, totalPages, setPage } = usePagination(filteredPosts, PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -217,7 +223,7 @@ export default function Blog() {
           </div>
         ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredPosts.map((post) => (
+          {pagedPosts.map((post) => (
             <motion.div 
               key={post.id}
               layout
@@ -294,6 +300,8 @@ export default function Blog() {
           ))}
         </div>
         )}
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

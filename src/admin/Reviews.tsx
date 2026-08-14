@@ -20,6 +20,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Review } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import ImageUploadField from '../components/ImageUploadField';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 10;
 
 const COLLECTION = 'reviews';
 
@@ -124,6 +128,8 @@ export default function Reviews() {
     r.course.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { pagedItems: pagedReviews, currentPage, totalPages, setPage } = usePagination(filteredReviews, PAGE_SIZE);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -174,7 +180,7 @@ export default function Reviews() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredReviews.map((review) => (
+          {pagedReviews.map((review) => (
             <motion.div 
               key={review.id}
               layout
@@ -254,6 +260,8 @@ export default function Reviews() {
             </div>
           )}
         </div>
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

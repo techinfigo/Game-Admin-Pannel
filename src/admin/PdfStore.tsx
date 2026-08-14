@@ -21,6 +21,10 @@ import { PdfItem } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import { uploadPdf } from '../services/uploadService';
 import ImageUploadField from '../components/ImageUploadField';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 10;
 
 const COLLECTION = 'pdfs';
 
@@ -163,6 +167,8 @@ export default function PdfStore() {
     p.examTag.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { pagedItems: pagedPdfs, currentPage, totalPages, setPage } = usePagination(filteredPdfs, PAGE_SIZE);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -229,7 +235,7 @@ export default function PdfStore() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredPdfs.map((pdf) => (
+              {pagedPdfs.map((pdf) => (
                 <tr key={pdf.id} className="group hover:bg-slate-50/50 transition-colors">
                   <td className="py-4">
                     <div className="flex items-center gap-3">
@@ -293,6 +299,8 @@ export default function PdfStore() {
           </table>
         </div>
         )}
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

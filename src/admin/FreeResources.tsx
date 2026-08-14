@@ -25,6 +25,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { FreeResource } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import ImageUploadField from '../components/ImageUploadField';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 10;
 
 const COLLECTION = 'resources';
 
@@ -132,6 +136,8 @@ export default function FreeResources() {
     r.examTag.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { pagedItems: pagedResources, currentPage, totalPages, setPage } = usePagination(filteredResources, PAGE_SIZE);
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'pdf': return FileText;
@@ -210,7 +216,7 @@ export default function FreeResources() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredResources.map((resource) => {
+              {pagedResources.map((resource) => {
                 const Icon = getIcon(resource.type || 'link');
                 return (
                   <tr key={resource.id} className="group hover:bg-slate-50/50 transition-colors">
@@ -283,6 +289,8 @@ export default function FreeResources() {
           </table>
         </div>
         )}
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {/* Modal */}

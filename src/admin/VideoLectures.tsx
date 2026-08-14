@@ -23,6 +23,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { VideoLecture } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import ImageUploadField from '../components/ImageUploadField';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 12;
 
 const COLLECTION = 'videoLectures';
 
@@ -135,6 +139,8 @@ export default function VideoLectures() {
     l.examTag.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { pagedItems: pagedLectures, currentPage, totalPages, setPage } = usePagination(filteredLectures, PAGE_SIZE);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -191,7 +197,7 @@ export default function VideoLectures() {
           </div>
         ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredLectures.map((lecture) => (
+          {pagedLectures.map((lecture) => (
             <motion.div 
               key={lecture.id}
               layout
@@ -276,6 +282,8 @@ export default function VideoLectures() {
           ))}
         </div>
         )}
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

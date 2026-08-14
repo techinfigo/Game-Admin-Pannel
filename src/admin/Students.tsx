@@ -19,6 +19,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Student } from '../types';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 10;
 
 const initialStudents: Student[] = [
   {
@@ -66,6 +70,8 @@ export default function Students() {
     s.phone.includes(searchTerm)
   );
 
+  const { pagedItems: pagedStudents, currentPage, totalPages, setPage } = usePagination(filteredStudents, PAGE_SIZE);
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-IN', {
       day: 'numeric',
@@ -107,7 +113,7 @@ export default function Students() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredStudents.map((student) => (
+              {pagedStudents.map((student) => (
                 <tr key={student.id} className="group hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setSelectedStudent(student)}>
                   <td className="py-4">
                     <div className="flex items-center gap-3">
@@ -164,6 +170,8 @@ export default function Students() {
             </div>
           )}
         </div>
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {/* Student Details Drawer */}

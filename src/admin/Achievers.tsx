@@ -9,6 +9,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Achiever } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import ImageUploadField from '../components/ImageUploadField';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 12;
 
 const COLLECTION = 'achievers';
 
@@ -111,6 +115,8 @@ export default function Achievers() {
     a.exam.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { pagedItems: pagedAchievers, currentPage, totalPages, setPage } = usePagination(filteredAchievers, PAGE_SIZE);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -167,7 +173,7 @@ export default function Achievers() {
           </div>
         ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAchievers.map((achiever) => (
+          {pagedAchievers.map((achiever) => (
             <motion.div 
               key={achiever.id}
               layout
@@ -243,6 +249,8 @@ export default function Achievers() {
           ))}
         </div>
         )}
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

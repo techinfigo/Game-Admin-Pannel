@@ -20,6 +20,10 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Transaction } from '../types';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 10;
 
 const initialTransactions: Transaction[] = [
   {
@@ -89,6 +93,8 @@ export default function Transactions() {
 
     return matchesSearch && matchesStatus && matchesDate;
   });
+
+  const { pagedItems: pagedTransactions, currentPage, totalPages, setPage } = usePagination(filteredTransactions, PAGE_SIZE);
 
   const stats = [
     { label: 'Total Revenue', value: '₹14,250', icon: IndianRupee, color: 'bg-green-500' },
@@ -227,7 +233,7 @@ export default function Transactions() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredTransactions.map((t) => {
+              {pagedTransactions.map((t) => {
                 const StatusIcon = getStatusIcon(t.status);
                 return (
                   <tr key={t.id} className="group hover:bg-slate-50/50 transition-colors">
@@ -269,6 +275,8 @@ export default function Transactions() {
             </div>
           )}
         </div>
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </div>
   );

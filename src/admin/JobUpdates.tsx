@@ -16,13 +16,13 @@ import {
   X,
   CheckCircle2,
   Clock,
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { JobUpdate, JobStatus } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
 
 const COLLECTION = 'jobUpdates';
 const PAGE_SIZE = 10;
@@ -34,7 +34,6 @@ export default function JobUpdates() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<JobUpdate | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
 
   const [formData, setFormData] = useState<Partial<JobUpdate>>({
     notification: '',
@@ -185,20 +184,7 @@ export default function JobUpdates() {
     j.eligibility.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / PAGE_SIZE));
-  // Clamp during render as well as in the effect below, so a page that shrinks
-  // (search narrowed, last item on the page deleted) never renders empty.
-  const currentPage = Math.min(page, totalPages);
-  const pageStart = (currentPage - 1) * PAGE_SIZE;
-  const visibleJobs = filteredJobs.slice(pageStart, pageStart + PAGE_SIZE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm]);
-
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
+  const { pagedItems: visibleJobs, currentPage, totalPages, setPage } = usePagination(filteredJobs, PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -314,37 +300,7 @@ export default function JobUpdates() {
           )}
         </div>
 
-        {filteredJobs.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-400">
-              Showing {pageStart + 1}–{pageStart + visibleJobs.length} of {filteredJobs.length}
-            </p>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-game-teal text-white hover:bg-game-teal/90 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Previous
-              </button>
-
-              <span className="text-xs font-bold text-slate-500 whitespace-nowrap">
-                Page {currentPage} of {totalPages}
-              </span>
-
-              <button
-                onClick={() => setPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-game-teal text-white hover:bg-game-teal/90 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-all"
-              >
-                Next
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

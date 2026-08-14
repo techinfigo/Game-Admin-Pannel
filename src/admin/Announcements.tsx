@@ -8,6 +8,10 @@ import { Plus, Search, Megaphone, Calendar, Edit2, Trash2, X, Bell, CheckCircle2
 import { motion, AnimatePresence } from 'motion/react';
 import { Announcement } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 10;
 
 const COLLECTION = 'announcements';
 
@@ -111,6 +115,8 @@ export default function Announcements() {
     a.message.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { pagedItems: pagedAnnouncements, currentPage, totalPages, setPage } = usePagination(filteredAnnouncements, PAGE_SIZE);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -161,7 +167,7 @@ export default function Announcements() {
         </div>
 
         <div className="space-y-4">
-          {filteredAnnouncements.map((announcement) => (
+          {pagedAnnouncements.map((announcement) => (
             <motion.div 
               key={announcement.id}
               layout
@@ -217,6 +223,8 @@ export default function Announcements() {
             </div>
           )}
         </div>
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

@@ -21,6 +21,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Faculty } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import ImageUploadField from '../components/ImageUploadField';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 12;
 
 const COLLECTION = 'faculty';
 
@@ -189,6 +193,8 @@ export default function FacultyPage() {
     (f.role && f.role.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const { pagedItems: pagedFaculty, currentPage, totalPages, setPage } = usePagination(filteredFaculty, PAGE_SIZE);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -245,7 +251,7 @@ export default function FacultyPage() {
           </div>
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFaculty.map((member) => (
+          {pagedFaculty.map((member) => (
             <motion.div 
               key={member.id}
               layout
@@ -318,6 +324,8 @@ export default function FacultyPage() {
           ))}
         </div>
         )}
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

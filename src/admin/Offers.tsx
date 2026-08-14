@@ -20,6 +20,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Offer } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import ImageUploadField from '../components/ImageUploadField';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+
+const PAGE_SIZE = 10;
 
 const COLLECTION = 'offers';
 
@@ -130,6 +134,8 @@ export default function Offers() {
     o.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { pagedItems: pagedOffers, currentPage, totalPages, setPage } = usePagination(filteredOffers, PAGE_SIZE);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -186,7 +192,7 @@ export default function Offers() {
           </div>
         ) : (
         <div className="space-y-6">
-          {filteredOffers.map((offer) => (
+          {pagedOffers.map((offer) => (
             <motion.div 
               key={offer.id}
               layout
@@ -255,6 +261,8 @@ export default function Offers() {
           ))}
         </div>
         )}
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       <AnimatePresence>

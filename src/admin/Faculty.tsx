@@ -250,7 +250,7 @@ export default function FacultyPage() {
             <p className="text-slate-500 font-medium">No faculty members found.</p>
           </div>
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
           {pagedFaculty.map((member) => (
             <motion.div 
               key={member.id}
@@ -266,30 +266,32 @@ export default function FacultyPage() {
                 </div>
               )}
               
-              <div className="p-6">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border-2 border-white shadow-lg">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 border-2 border-white shadow-md">
                     <FacultyAvatar name={member.name} photoUrl={member.photoUrl} />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-lg leading-tight line-clamp-1">{member.name}</h3>
-                    <div className="text-game-teal font-bold text-xs uppercase mt-1 line-clamp-1">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-1">{member.name}</h3>
+                    <div className="text-game-teal font-bold text-[11px] uppercase mt-0.5 line-clamp-1">
                       {member.role}
                     </div>
                     {member.expLabel && (
-                      <span className="inline-block mt-1.5 px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-bold rounded uppercase">
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-bold rounded uppercase">
                         {member.expLabel}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <Briefcase className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium line-clamp-1">{member.experience}</span>
-                  </div>
-                  
+                <div className="space-y-2">
+                  {member.experience?.trim() && (
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="font-medium line-clamp-1">{member.experience}</span>
+                    </div>
+                  )}
+
                   {member.stats && member.stats.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {member.stats.map((stat, i) => (
@@ -300,21 +302,25 @@ export default function FacultyPage() {
                     </div>
                   )}
 
-                  <p className="text-slate-500 text-sm leading-relaxed line-clamp-2 bg-slate-50 p-3 rounded-xl italic">
-                    "{member.bio}"
-                  </p>
+                  {/* Only render the quote box when there is an actual quote —
+                      an empty one is just a grey band of dead space. */}
+                  {member.bio?.trim() && (
+                    <p className="text-slate-500 text-xs leading-relaxed line-clamp-2 bg-slate-50 px-2.5 py-2 rounded-lg italic">
+                      "{member.bio.trim()}"
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-50">
-                  <button 
+                <div className="flex items-center justify-end gap-1 pt-3 border-t border-slate-50">
+                  <button
                     onClick={() => handleOpenModal(member)}
-                    className="p-2 text-slate-400 hover:text-game-teal hover:bg-game-teal/5 rounded-xl transition-all"
+                    className="p-1.5 text-slate-400 hover:text-game-teal hover:bg-game-teal/5 rounded-lg transition-all"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(member.id)}
-                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

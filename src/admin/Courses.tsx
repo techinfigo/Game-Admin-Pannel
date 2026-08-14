@@ -13,7 +13,6 @@ import {
   Edit2,
   Trash2,
   X,
-  CheckCircle,
   Image as ImageIcon,
   ExternalLink,
   Tag as TagIcon,
@@ -260,101 +259,79 @@ export default function Courses() {
             <p className="text-slate-500 font-medium">No courses found.</p>
           </div>
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredCourses.map((course) => (
-            <motion.div 
+            <motion.div
               key={course.id}
               layout
-              className="group border border-slate-100 rounded-3xl overflow-hidden hover:border-game-teal transition-all duration-300"
+              className="group border border-slate-100 rounded-2xl overflow-hidden hover:border-game-teal transition-colors duration-200"
             >
-              <div className="aspect-video relative overflow-hidden">
+              <div className="h-32 relative overflow-hidden">
                 {isRelativeImagePath(course.imageUrl) ? (
-                  <CourseImagePlaceholder title={course.title} />
+                  <CourseImagePlaceholder title={course.title} compact />
                 ) : (
                   <img
                     src={course.imageUrl}
                     alt={course.title}
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=No+Image';
                     }}
                   />
                 )}
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
-                  <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-game-teal text-[10px] font-bold rounded-lg uppercase shadow-sm">
-                    {course.tag}
-                  </span>
-                  <span className="px-3 py-1 bg-game-teal text-white text-[10px] font-bold rounded-lg uppercase shadow-sm">
-                    {course.category}
-                  </span>
-                </div>
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <button 
+                <span className="absolute top-2 left-2 max-w-[70%] truncate px-2 py-0.5 bg-game-teal text-white text-[9px] font-bold rounded-md uppercase shadow-sm">
+                  {course.category}
+                </span>
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <button
                     onClick={() => handleOpenModal(course)}
-                    className="p-2 bg-white/90 backdrop-blur-md text-slate-600 hover:text-game-teal rounded-xl shadow-sm transition-colors"
+                    title="Edit course"
+                    className="p-1.5 bg-white/90 backdrop-blur-md text-slate-600 hover:text-game-teal rounded-lg shadow-sm transition-colors"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className="w-3.5 h-3.5" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(course.id)}
-                    className="p-2 bg-white/90 backdrop-blur-md text-slate-600 hover:text-red-500 rounded-xl shadow-sm transition-colors"
+                    title="Delete course"
+                    className="p-1.5 bg-white/90 backdrop-blur-md text-slate-600 hover:text-red-500 rounded-lg shadow-sm transition-colors"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              <div className="p-6">
-                <div className="flex justify-between items-start gap-4 mb-2">
-                  <h3 className="font-bold text-xl text-slate-900 line-clamp-1">{course.title}</h3>
-                  <div className="text-right">
-                    <p className="text-game-teal font-bold text-lg">{course.price}</p>
-                    <p className="text-slate-400 text-[10px] line-through">{course.originalPrice}</p>
-                  </div>
-                </div>
-                <p className="text-slate-500 text-sm line-clamp-2 mb-4">{course.tagline}</p>
+              <div className="p-3">
+                <h3 className="font-bold text-sm text-slate-900 line-clamp-2 leading-snug mb-1.5" title={course.title}>
+                  {course.title}
+                </h3>
 
-                <div className="grid grid-cols-2 gap-y-2 gap-x-4 mb-6">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                    <Clock className="w-3 h-3 text-game-teal" />
-                    {course.duration}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                    <Globe className="w-3 h-3 text-game-teal" />
-                    {course.language}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                    <Users className="w-3 h-3 text-game-teal" />
-                    {course.enrolledCount} Enrolled
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                    <Star className="w-3 h-3 text-game-gold fill-game-gold" />
-                    {course.rating} Rating
-                  </div>
+                <div className="flex items-baseline gap-1.5 mb-2">
+                  <span className="text-game-teal font-bold text-sm">{course.price}</span>
+                  <span className="text-slate-400 text-[10px] line-through">{course.originalPrice}</span>
                 </div>
-                
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {course.features.slice(0, 3).map((f, i) => (
-                    <span key={i} className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md">
-                      <CheckCircle className="w-3 h-3 text-game-teal" />
-                      {f}
+
+                <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-slate-500">
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="flex items-center gap-1 shrink-0">
+                      <Clock className="w-3 h-3 text-game-teal" />
+                      {course.duration}
                     </span>
-                  ))}
-                  {course.features.length > 3 && (
-                    <span className="text-[10px] font-bold text-slate-400 px-2 py-0.5">+{course.features.length - 3} more</span>
-                  )}
+                    <span className="flex items-center gap-1 shrink-0">
+                      <Star className="w-3 h-3 text-game-gold fill-game-gold" />
+                      {course.rating}
+                    </span>
+                  </span>
+                  <a
+                    href={course.enrollLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View landing page"
+                    className="p-1 text-slate-400 hover:text-game-teal transition-colors shrink-0"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
                 </div>
-
-                <a 
-                  href={course.enrollLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-full btn-secondary justify-center text-sm"
-                >
-                  View Landing Page
-                  <ExternalLink className="w-4 h-4" />
-                </a>
               </div>
             </motion.div>
           ))}

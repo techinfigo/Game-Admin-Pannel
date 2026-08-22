@@ -24,6 +24,7 @@ import {
   Users,
   Video,
   MonitorPlay,
+  GalleryHorizontalEnd,
   ShoppingBag,
   UserCheck,
   CreditCard
@@ -44,6 +45,7 @@ const navGroups = [
     items: [
       { path: '/admin/hero', icon: MonitorPlay, label: 'Hero Slides' },
       { path: '/admin/courses', icon: GraduationCap, label: 'Courses' },
+      { path: '/admin/course-banners', icon: GalleryHorizontalEnd, label: 'Course Banners' },
       { path: '/admin/jobs', icon: Briefcase, label: 'Job Updates' },
       { path: '/admin/offers', icon: Tag, label: 'Offers' },
       { path: '/admin/achievers', icon: Trophy, label: 'Achievers' },

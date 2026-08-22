@@ -183,6 +183,14 @@ export interface HeroSlide {
   active: boolean;
 }
 
+export interface CourseBanner {
+  id: string;
+  imageUrl: string;
+  order: number;
+  active: boolean;
+  createdAt?: string;
+}
+
 export interface DashboardStats {
   resources: number;
   jobs: number;

@@ -71,9 +71,18 @@ export default function CourseBanners() {
     setIsModalOpen(true);
   };
 
+  const resetForm = () => {
+    setFormData({
+      imageUrl: '',
+      order: banners.length + 1,
+      active: true
+    });
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingBanner(null);
+    resetForm();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,8 +97,11 @@ export default function CourseBanners() {
           createdAt: new Date().toISOString()
         } as CourseBanner);
       }
-      await loadBanners();
+      // Close before refreshing: loadBanners() flips isLoading, which swaps the
+      // whole section for the spinner and remounts this modal. Closing first
+      // means the modal can never reappear on top of the refreshed list.
       handleCloseModal();
+      await loadBanners();
     } catch (error) {
       console.error('Failed to save course banner', error);
       setErrorMessage('Failed to save course banner.');
@@ -247,6 +259,12 @@ export default function CourseBanners() {
               </div>
 
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8 scroll-smooth">
+                {errorMessage && (
+                  <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold">
+                    {errorMessage}
+                  </div>
+                )}
+
                 <ImageUploadField
                   label="Banner Image"
                   value={formData.imageUrl}

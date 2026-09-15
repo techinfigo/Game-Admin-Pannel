@@ -35,6 +35,8 @@ import { usePagination } from '../hooks/usePagination';
 const COLLECTION = 'courses';
 const PAGE_SIZE = 12;
 
+const CATEGORY_OPTIONS = ['GATE / ESE', 'SSC JE', 'Govt R&D / PSUs', 'RRB / State AE JE', 'IIT-JEE / NEET', 'Non-Tech', 'Class 9th - 12th', 'Excellence Courses'];
+
 const isRelativeImagePath = (url?: string) => !!url && url.startsWith('/');
 
 const getInitials = (title?: string) => {
@@ -81,6 +83,7 @@ export default function Courses() {
     imageUrl: '',
     tag: '',
     category: '',
+    categories: [],
     exam: '',
     branch: '',
     duration: '',
@@ -98,6 +101,7 @@ export default function Courses() {
   });
 
   const [featureInput, setFeatureInput] = useState('');
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
 
   const loadCourses = async () => {
     setIsLoading(true);
@@ -120,7 +124,12 @@ export default function Courses() {
   const handleOpenModal = (course?: Course) => {
     if (course) {
       setEditingCourse(course);
-      setFormData(course);
+      setFormData({
+        ...course,
+        categories: course.categories && course.categories.length > 0
+          ? course.categories
+          : (course.category ? [course.category] : [])
+      });
     } else {
       setEditingCourse(null);
       setFormData({
@@ -129,6 +138,7 @@ export default function Courses() {
         imageUrl: '',
         tag: '',
         category: '',
+        categories: [],
         exam: '',
         branch: '',
         duration: '',
@@ -145,6 +155,7 @@ export default function Courses() {
         enrollLink: ''
       });
     }
+    setCategoriesError(null);
     setIsModalOpen(true);
   };
 
@@ -171,14 +182,35 @@ export default function Courses() {
     }));
   };
 
+  const toggleCategory = (option: string) => {
+    setFormData(prev => {
+      const current = prev.categories || [];
+      const next = current.includes(option)
+        ? current.filter(c => c !== option)
+        : [...current, option];
+      return { ...prev, categories: next };
+    });
+    setCategoriesError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    const categories = formData.categories || [];
+    if (categories.length === 0) {
+      setCategoriesError('Select at least one category.');
+      return;
+    }
+    setCategoriesError(null);
+
+    const dataToSave = { ...formData, categories, category: categories[0] || '' };
+
     try {
       if (editingCourse) {
-        await updateItem<Course>(COLLECTION, editingCourse.id, formData);
+        await updateItem<Course>(COLLECTION, editingCourse.id, dataToSave);
       } else {
-        await addItem<Course>(COLLECTION, { ...formData, createdAt: new Date().toISOString() } as Course);
+        await addItem<Course>(COLLECTION, { ...dataToSave, createdAt: new Date().toISOString() } as Course);
       }
       await loadCourses();
       handleCloseModal();
@@ -285,8 +317,11 @@ export default function Courses() {
                     }}
                   />
                 )}
-                <span className="absolute top-2 left-2 max-w-[70%] truncate px-2 py-0.5 bg-game-teal text-white text-[9px] font-bold rounded-md uppercase shadow-sm">
-                  {course.category}
+                <span
+                  className="absolute top-2 left-2 max-w-[70%] truncate px-2 py-0.5 bg-game-teal text-white text-[9px] font-bold rounded-md uppercase shadow-sm"
+                  title={course.categories?.length ? course.categories.join(', ') : course.category}
+                >
+                  {course.categories?.length ? course.categories.join(', ') : course.category}
                 </span>
                 <div className="absolute top-2 right-2 flex gap-1">
                   <button
@@ -397,14 +432,27 @@ export default function Courses() {
                         className="input-field" placeholder="e.g. PREMIUM BATCH" required 
                       />
                     </div>
-                    <div>
-                      <label className="label-text">Category</label>
-                      <input 
-                        type="text" 
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="input-field" placeholder="e.g. GATE / ESE" required 
-                      />
+                    <div className="md:col-span-2">
+                      <label className="label-text">Categories</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+                        {CATEGORY_OPTIONS.map((option) => (
+                          <label
+                            key={option}
+                            className="flex items-center gap-2 text-sm text-slate-700 font-medium cursor-pointer select-none"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={(formData.categories || []).includes(option)}
+                              onChange={() => toggleCategory(option)}
+                              className="w-4 h-4 rounded border-slate-300 text-game-teal focus:ring-game-teal"
+                            />
+                            {option}
+                          </label>
+                        ))}
+                      </div>
+                      {categoriesError && (
+                        <p className="text-red-500 text-xs font-semibold mt-1.5">{categoriesError}</p>
+                      )}
                     </div>
                   </div>
                 </div>

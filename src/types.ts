@@ -60,7 +60,8 @@ export interface Course {
   tagline: string;
   imageUrl: string;
   tag: string;           // badge text, e.g. "BASIC BATCH"
-  category: string;      // e.g. "GATE / ESE"
+  category: string;      // e.g. "GATE / ESE" (kept for backward compatibility)
+  categories?: string[]; // e.g. ["GATE / ESE", "SSC JE"] — course appears in every listed category
   exam: string;          // e.g. "GATE / ESE / PSUs / ISRO / BARC"
   branch: string;        // e.g. "Mechanical"
   duration: string;      // e.g. "12 Months"

@@ -14,9 +14,10 @@ interface ImageUploadFieldProps {
   folder: string;
   renderPreview?: (value: string) => React.ReactNode;
   hint?: string;
+  previewClassName?: string;
 }
 
-export default function ImageUploadField({ label, value, onChange, folder, renderPreview, hint }: ImageUploadFieldProps) {
+export default function ImageUploadField({ label, value, onChange, folder, renderPreview, hint, previewClassName }: ImageUploadFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export default function ImageUploadField({ label, value, onChange, folder, rende
     <div>
       <label className="label-text">{label}</label>
       <div className="flex items-start gap-4">
-        <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center">
+        <div className={`${previewClassName || 'w-16 h-16'} rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center`}>
           {value ? (
             renderPreview ? renderPreview(value) : (
               <img src={value} alt={label} referrerPolicy="no-referrer" className="w-full h-full object-cover" />

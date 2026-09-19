@@ -303,7 +303,7 @@ export default function Courses() {
               layout
               className="group border border-slate-100 rounded-2xl overflow-hidden hover:border-game-teal transition-colors duration-200"
             >
-              <div className="h-32 relative overflow-hidden">
+              <div className="h-32 relative overflow-hidden bg-slate-100">
                 {isRelativeImagePath(course.imageUrl) ? (
                   <CourseImagePlaceholder title={course.title} compact />
                 ) : (
@@ -311,7 +311,7 @@ export default function Courses() {
                     src={course.imageUrl}
                     alt={course.title}
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=No+Image';
                     }}
@@ -622,11 +622,12 @@ export default function Courses() {
                         onChange={(url) => setFormData({ ...formData, imageUrl: url })}
                         folder="courses"
                         hint="Recommended: 800 × 600 px (4:3 course thumbnail)"
+                        previewClassName="w-40 h-32"
                         renderPreview={(value) =>
                           isRelativeImagePath(value) ? (
                             <CourseImagePlaceholder title={formData.title} compact />
                           ) : (
-                            <img src={value} alt="Course Banner" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                            <img src={value} alt="Course Banner" referrerPolicy="no-referrer" className="w-full h-full object-contain" />
                           )
                         }
                       />

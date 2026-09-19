@@ -179,7 +179,7 @@ export default function CourseBanners() {
               layout
               className="group border border-slate-100 rounded-3xl overflow-hidden hover:border-game-teal transition-all duration-300 bg-white shadow-sm"
             >
-              <div className="relative bg-slate-100 aspect-[3.5/1] overflow-hidden">
+              <div className="relative bg-slate-100 aspect-[1400/300] overflow-hidden">
                 <img
                   src={banner.imageUrl}
                   alt={`Course banner #${banner.order}`}
@@ -270,7 +270,7 @@ export default function CourseBanners() {
                   value={formData.imageUrl}
                   onChange={(url) => setFormData({ ...formData, imageUrl: url })}
                   folder="banners"
-                  hint="Recommended: 1400 × 400 px wide banner (3.5:1)"
+                  hint="Recommended: 1400 × 300 px wide banner (14:3)"
                   renderPreview={(value) => (
                     <img src={value} alt="Banner" referrerPolicy="no-referrer" className="w-full h-full object-contain" />
                   )}

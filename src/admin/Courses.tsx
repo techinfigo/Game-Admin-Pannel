@@ -621,7 +621,7 @@ export default function Courses() {
                         value={formData.imageUrl}
                         onChange={(url) => setFormData({ ...formData, imageUrl: url })}
                         folder="courses"
-                        hint="Recommended: 500 × 600 px (portrait)"
+                        hint="Recommended: 500 × 666 px (portrait)"
                         previewClassName="w-40 h-32"
                         renderPreview={(value) =>
                           isRelativeImagePath(value) ? (

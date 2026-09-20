@@ -4,7 +4,7 @@
  */
 
 import React, { useRef, useState } from 'react';
-import { Image as ImageIcon, Upload, Link as LinkIcon } from 'lucide-react';
+import { Image as ImageIcon, Upload, Link as LinkIcon, Trash2 } from 'lucide-react';
 import { uploadImage } from '../services/uploadService';
 
 interface ImageUploadFieldProps {
@@ -61,24 +61,38 @@ export default function ImageUploadField({ label, value, onChange, folder, rende
             className="hidden"
             onChange={handleFileSelect}
           />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="btn-secondary text-sm px-4 disabled:opacity-50"
-          >
-            {isUploading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-slate-300 border-t-game-teal rounded-full animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4" />
-                Upload Image
-              </>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="btn-secondary text-sm px-4 disabled:opacity-50"
+            >
+              {isUploading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-slate-300 border-t-game-teal rounded-full animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  Upload Image
+                </>
+              )}
+            </button>
+            {value && (
+              <button
+                type="button"
+                onClick={() => onChange('')}
+                disabled={isUploading}
+                title="Remove image"
+                className="btn-secondary text-sm px-3 text-red-500 hover:text-red-600 disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                Remove
+              </button>
             )}
-          </button>
+          </div>
           {hint && <p className="text-xs text-slate-400">{hint}</p>}
           <div className="relative">
             <input

@@ -25,7 +25,7 @@ const EXAM_ID = 'gate';
 const STORAGE_FOLDER = 'exam-pages/gate';
 
 // ---- Types (mirror the website's lib/examContentTypes.ts) ----
-interface HeroSlide { badge?: string; title?: string; buttonText?: string; imageUrl?: string; bgColor?: string; }
+interface HeroSlide { badge?: string; title?: string; buttonText?: string; imageUrl?: string; bgColor?: string; link?: string; }
 interface DateRow { event?: string; date?: string; }
 interface Faq { q?: string; a?: string; }
 interface Benefit { title?: string; desc?: string; points?: string[]; }
@@ -46,10 +46,10 @@ interface ExamContent {
 // empty and the client edits the real page content.
 const GATE_SEED: ExamContent = {
   hero: [
-    { badge: 'REGISTRATION', title: 'GATE 2026 Registration Open', buttonText: 'Register Now', imageUrl: '/gate/hero-registration.webp', bgColor: 'bg-[#004d50]' },
-    { badge: 'MOCK TEST', title: 'Free GATE Mock Test', buttonText: 'Start Test', imageUrl: '/gate/hero-mocktest.webp', bgColor: 'bg-[#002b2e]' },
-    { badge: 'PSU JOBS', title: 'Top PSU Recruitment Through GATE', buttonText: 'Explore Jobs', imageUrl: '/gate/hero-psujobs.webp', bgColor: 'bg-[#004d50]' },
-    { badge: 'IIT M.TECH', title: 'IIT Admission Through GATE', buttonText: 'Check Cutoffs', imageUrl: '/gate/hero-iitmtech.webp', bgColor: 'bg-[#002b2e]' },
+    { title: 'Prepare for GATE 2027 with Real Mentorship', imageUrl: '/gate/hero-registration.webp', link: '#gate-courses' },
+    { title: 'GATE 2027 Preparation Has To Start Now', imageUrl: '/gate/hero-mocktest.webp', link: '#gate-courses' },
+    { title: 'Test Your GATE 2027 Level', imageUrl: '/gate/hero-psujobs.webp', link: '#gate-courses' },
+    { title: 'Book Free Counselling — Unlock 7-Day Extra Discount', imageUrl: '/gate/hero-iitmtech.webp', link: '#gate-courses' },
   ],
   importantDates: [
     { event: 'GATE Online Application Processing System (GOAPS) opens', date: 'August 28, 2025' },
@@ -227,27 +227,22 @@ export default function ExamPages() {
       )}
 
       {/* HERO SLIDES */}
-      <SectionCard icon={MonitorPlay} title="Hero Banner Slides" subtitle="The rotating banners at the top. The image is what shows on the page.">
+      <SectionCard icon={MonitorPlay} title="Hero Banner Slides" subtitle="These banners are full designed images (the text and buttons are part of the picture). To change the wording or design, upload a new banner image. Set where clicking the banner should take the visitor.">
         {data.hero.map((s, i) => (
           <ItemShell key={i} index={i} onRemove={() => removeItem('hero', i)}>
+            <ImageUploadField label="Banner Image" value={s.imageUrl} onChange={url => updateItem('hero', i, { imageUrl: url })} folder={STORAGE_FOLDER} hint="The full banner graphic. Recommended: 900 × 700 px (landscape)." previewClassName="w-28 h-20" />
             <div>
-              <label className="label-text">Title (also image alt text)</label>
-              <input className="input-field" value={s.title || ''} onChange={e => updateItem('hero', i, { title: e.target.value })} placeholder="e.g. GATE 2026 Registration Open" />
+              <label className="label-text">Link — where clicking this banner goes</label>
+              <input className="input-field" value={s.link || ''} onChange={e => updateItem('hero', i, { link: e.target.value })} placeholder="e.g. #gate-courses  ·  /courses  ·  https://courses.gameacademy.in/..." />
+              <p className="text-xs text-slate-400 mt-1">Use <b>#gate-courses</b> to scroll to the courses on this page, a path like <b>/jobs</b> for another page on your site, or a full <b>https://</b> link to open elsewhere. Leave blank to scroll to the courses section.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="label-text">Badge (optional)</label>
-                <input className="input-field" value={s.badge || ''} onChange={e => updateItem('hero', i, { badge: e.target.value })} placeholder="e.g. REGISTRATION" />
-              </div>
-              <div>
-                <label className="label-text">Button Text (optional)</label>
-                <input className="input-field" value={s.buttonText || ''} onChange={e => updateItem('hero', i, { buttonText: e.target.value })} placeholder="e.g. Register Now" />
-              </div>
+            <div>
+              <label className="label-text">Image description (for SEO / accessibility — not shown on the page)</label>
+              <input className="input-field" value={s.title || ''} onChange={e => updateItem('hero', i, { title: e.target.value })} placeholder="e.g. GATE 2027 registration banner" />
             </div>
-            <ImageUploadField label="Slide Image" value={s.imageUrl} onChange={url => updateItem('hero', i, { imageUrl: url })} folder={STORAGE_FOLDER} hint="Recommended: 900 × 700 px" previewClassName="w-24 h-16" />
           </ItemShell>
         ))}
-        <AddButton label="Add Slide" onClick={() => addItem('hero', { badge: '', title: '', buttonText: '', imageUrl: '', bgColor: 'bg-[#004d50]' })} />
+        <AddButton label="Add Banner" onClick={() => addItem('hero', { title: '', imageUrl: '', link: '#gate-courses' })} />
       </SectionCard>
 
       {/* GATE ADVANTAGES (roadmap) */}

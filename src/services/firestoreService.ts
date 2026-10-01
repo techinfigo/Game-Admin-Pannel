@@ -1,5 +1,26 @@
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
+
+/** Read a single document by id (returns null if it does not exist). */
+export async function getSingle<T>(collectionName: string, id: string): Promise<T | null> {
+  try {
+    const snap = await getDoc(doc(db, collectionName, id));
+    return snap.exists() ? (snap.data() as T) : null;
+  } catch (error) {
+    console.error(`Failed to fetch document ${id} from ${collectionName}`, error);
+    throw error;
+  }
+}
+
+/** Create or overwrite a single document by id (merges with any existing fields). */
+export async function setSingle<T extends object>(collectionName: string, id: string, data: T): Promise<void> {
+  try {
+    await setDoc(doc(db, collectionName, id), data as Record<string, unknown>, { merge: true });
+  } catch (error) {
+    console.error(`Failed to save document ${id} in ${collectionName}`, error);
+    throw error;
+  }
+}
 
 export async function getAll<T>(collectionName: string): Promise<(T & { id: string })[]> {
   try {

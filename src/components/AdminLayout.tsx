@@ -27,7 +27,8 @@ import {
   GalleryHorizontalEnd,
   ShoppingBag,
   UserCheck,
-  CreditCard
+  CreditCard,
+  FileStack
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
@@ -44,6 +45,7 @@ const navGroups = [
     title: 'Website',
     items: [
       { path: '/admin/hero', icon: MonitorPlay, label: 'Hero Slides' },
+      { path: '/admin/exam-pages', icon: FileStack, label: 'Exam Pages' },
       { path: '/admin/courses', icon: GraduationCap, label: 'Courses' },
       { path: '/admin/course-banners', icon: GalleryHorizontalEnd, label: 'Course Banners' },
       { path: '/admin/jobs', icon: Briefcase, label: 'Job Updates' },

@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { BlogPost } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import ImageUploadField from '../components/ImageUploadField';
+import RichTextEditor from '../components/RichTextEditor';
 import Pagination from '../components/Pagination';
 import { usePagination } from '../hooks/usePagination';
 
@@ -379,12 +380,13 @@ export default function Blog() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="label-text">Full Content (Markdown/HTML supported)</label>
-                    <textarea 
+                    <label className="label-text">Full Content</label>
+                    <RichTextEditor
                       value={formData.content}
-                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                      className="input-field min-h-[200px] font-mono text-sm" placeholder="Write your full article content here..." required 
+                      onChange={(html) => setFormData({ ...formData, content: html })}
+                      placeholder="Write your full article content here..."
                     />
+                    <p className="text-xs text-slate-400 mt-1.5">Use the toolbar to format text — bold, underline, headings, lists, quotes and links.</p>
                   </div>
                   <div>
                     <label className="label-text">Author Name</label>

@@ -87,7 +87,27 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
     return await getDownloadURL(storageRef);
   } catch (error) {
     console.error('Failed to upload image', error);
-    throw error;
+    throw mapStorageError(error, 'image');
+  }
+}
+
+/** Turn a raw Firebase Storage error into a message that explains the real cause. */
+function mapStorageError(error: unknown, kind: 'image' | 'PDF'): Error {
+  const code = (error as { code?: string })?.code;
+  switch (code) {
+    case 'storage/unauthorized':
+      return new Error(
+        `Upload blocked by Firebase Storage rules. An admin needs to allow uploads in the Storage rules for this project.`
+      );
+    case 'storage/unauthenticated':
+      return new Error('Your session has expired. Please log out, log back in, and try again.');
+    case 'storage/retry-limit-exceeded':
+    case 'storage/canceled':
+      return new Error('Network problem during upload. Check your connection and try again.');
+    case 'storage/quota-exceeded':
+      return new Error('Storage is full. Please contact the developer.');
+    default:
+      return new Error(`Failed to upload ${kind}. Please try again.`);
   }
 }
 
@@ -107,6 +127,6 @@ export async function uploadPdf(file: File): Promise<{ fileUrl: string; fileName
     return { fileUrl, fileName: file.name, pageCount: undefined };
   } catch (error) {
     console.error('Failed to upload PDF', error);
-    throw error;
+    throw mapStorageError(error, 'PDF');
   }
 }

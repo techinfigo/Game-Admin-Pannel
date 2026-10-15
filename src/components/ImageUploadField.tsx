@@ -34,7 +34,7 @@ export default function ImageUploadField({ label, value, onChange, folder, rende
       onChange(url);
     } catch (err) {
       console.error('Failed to upload image', err);
-      setError('Failed to upload image. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to upload image. Please try again.');
     } finally {
       setIsUploading(false);
     }

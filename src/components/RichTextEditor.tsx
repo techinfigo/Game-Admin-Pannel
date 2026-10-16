@@ -23,6 +23,82 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
+// --- Paste sanitising ------------------------------------------------------
+// Pasted content (from Word, Google Docs, websites) carries inline fonts,
+// colours and messy markup that make the blog look different from the site and
+// can break links. We keep only plain semantic tags, drop every attribute
+// except safe hrefs, and turn bare URLs into real clickable links.
+
+const ALLOWED_TAGS = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'A', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
+const BLOCK_MAP: Record<string, string> = { DIV: 'P', H1: 'H2', H4: 'H3', H5: 'H3', H6: 'H3' };
+const URL_RE = /((?:https?:\/\/|www\.)[^\s<]+[^\s<.,;:!?)])/gi;
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function linkifyEscaped(text: string): string {
+  let out = '';
+  let last = 0;
+  let m: RegExpExecArray | null;
+  URL_RE.lastIndex = 0;
+  while ((m = URL_RE.exec(text))) {
+    out += escapeHtml(text.slice(last, m.index));
+    const raw = m[0];
+    const href = raw.startsWith('www.') ? `https://${raw}` : raw;
+    out += `<a href="${escapeAttr(href)}">${escapeHtml(raw)}</a>`;
+    last = m.index + raw.length;
+  }
+  out += escapeHtml(text.slice(last));
+  return out;
+}
+
+function cleanChildren(node: Node, insideAnchor: boolean): string {
+  let out = '';
+  node.childNodes.forEach((child) => {
+    if (child.nodeType === 3 /* text */) {
+      const text = child.nodeValue || '';
+      out += insideAnchor ? escapeHtml(text) : linkifyEscaped(text);
+      return;
+    }
+    if (child.nodeType !== 1 /* element */) return;
+    const el = child as HTMLElement;
+    let tag = BLOCK_MAP[el.tagName] || el.tagName;
+
+    if (tag === 'A') {
+      const href = el.getAttribute('href') || '';
+      if (/^(https?:|mailto:|tel:)/i.test(href)) {
+        out += `<a href="${escapeAttr(href)}">${cleanChildren(el, true)}</a>`;
+      } else {
+        out += cleanChildren(el, insideAnchor); // drop unsafe link, keep text
+      }
+      return;
+    }
+    if (ALLOWED_TAGS.has(tag)) {
+      const t = tag.toLowerCase();
+      out += `<${t}>${cleanChildren(el, insideAnchor)}</${t}>`;
+    } else {
+      out += cleanChildren(el, insideAnchor); // unwrap unknown tag, keep contents
+    }
+  });
+  return out;
+}
+
+function sanitizePastedHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return cleanChildren(doc.body, false);
+}
+
+function plainTextToHtml(text: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((block) => `<p>${linkifyEscaped(block).replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}
+
 /**
  * A lightweight WYSIWYG editor for blog content. It edits HTML directly (the
  * website renders the stored HTML), so the admin can apply bold, underline,
@@ -101,10 +177,43 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     refreshActive();
   };
 
+  // Clean up whatever is pasted so it inherits the site font and keeps links
+  // clickable, instead of carrying Word/Docs/browser styling.
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const html = e.clipboardData.getData('text/html');
+    const text = e.clipboardData.getData('text/plain');
+    const cleaned = html ? sanitizePastedHtml(html) : plainTextToHtml(text);
+    editorRef.current?.focus();
+    // eslint-disable-next-line deprecation/deprecation
+    document.execCommand('insertHTML', false, cleaned);
+    emitChange();
+    refreshActive();
+  };
+
   const addLink = () => {
+    // Keep the current selection so the prompt dialog doesn't lose it.
+    const sel = window.getSelection();
+    const saved = sel && sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+
     const url = window.prompt('Enter the link URL (include https://):', 'https://');
-    if (!url) return;
-    exec('createLink', url);
+    if (!url || url === 'https://') return;
+    const href = /^(https?:|mailto:|tel:)/i.test(url) ? url : `https://${url}`;
+
+    editorRef.current?.focus();
+    if (saved) {
+      sel!.removeAllRanges();
+      sel!.addRange(saved);
+    }
+    if (!saved || saved.collapsed) {
+      // Nothing selected — drop the URL in as a fresh clickable link.
+      // eslint-disable-next-line deprecation/deprecation
+      document.execCommand('insertHTML', false, `<a href="${escapeAttr(href)}">${escapeHtml(url)}</a>`);
+      emitChange();
+      refreshActive();
+    } else {
+      exec('createLink', href);
+    }
   };
 
   const buttons: { icon: React.ElementType; title: string; action: () => void; activeKey?: string }[] = [
@@ -155,6 +264,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
         contentEditable
         suppressContentEditableWarning
         onInput={() => { emitChange(); refreshActive(); }}
+        onPaste={handlePaste}
         onBlur={emitChange}
         onKeyUp={refreshActive}
         onMouseUp={refreshActive}

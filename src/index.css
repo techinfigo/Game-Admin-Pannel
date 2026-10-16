@@ -40,7 +40,11 @@
   }
 }
 
-/* Rich text editor — show formatting as it will appear on the site */
+/* Rich text editor — show formatting as it will appear on the site.
+   Inter matches the website's body font so the blog looks the same here. */
+.rte-content {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
 .rte-content:empty::before {
   content: attr(data-placeholder);
   color: #94a3b8;

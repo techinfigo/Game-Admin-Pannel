@@ -240,3 +240,16 @@ export interface Transaction {
   status: 'success' | 'failed' | 'pending';
   createdAt: string;
 }
+
+export interface Coupon {
+  id: string;
+  code: string;
+  type: 'percent' | 'flat';
+  value: number;
+  active: boolean;
+  expiresAt?: string;
+  maxUses?: number;
+  minAmount?: number;
+  usedCount?: number;
+  createdAt?: string;
+}

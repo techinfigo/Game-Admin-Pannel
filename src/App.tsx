@@ -30,6 +30,7 @@ const CourseBanners = React.lazy(() => import('./admin/CourseBanners'));
 const PdfStore = React.lazy(() => import('./admin/PdfStore'));
 const Students = React.lazy(() => import('./admin/Students'));
 const Transactions = React.lazy(() => import('./admin/Transactions'));
+const Coupons = React.lazy(() => import('./admin/Coupons'));
 
 const Loading = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -147,6 +148,11 @@ export default function App() {
             <Route path="transactions" element={
               <React.Suspense fallback={<Loading />}>
                 <Transactions />
+              </React.Suspense>
+            } />
+            <Route path="coupons" element={
+              <React.Suspense fallback={<Loading />}>
+                <Coupons />
               </React.Suspense>
             } />
           </Route>

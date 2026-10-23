@@ -28,7 +28,8 @@ import {
   ShoppingBag,
   UserCheck,
   CreditCard,
-  FileStack
+  FileStack,
+  Ticket
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
@@ -62,6 +63,7 @@ const navGroups = [
     title: 'Student Portal',
     items: [
       { path: '/admin/pdf-store', icon: ShoppingBag, label: 'PDF Store' },
+      { path: '/admin/coupons', icon: Ticket, label: 'Coupons' },
       { path: '/admin/students', icon: UserCheck, label: 'Students' },
       { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
       { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },

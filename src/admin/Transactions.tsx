@@ -3,118 +3,169 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { 
-  Search, 
-  Filter,
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Search,
   Download,
-  Calendar,
   IndianRupee,
   TrendingUp,
   CreditCard,
-  AlertCircle,
+  Users,
   CheckCircle2,
+  AlertCircle,
   Clock,
-  ChevronDown,
-  X
+  Loader2,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Transaction } from '../types';
 import Pagination from '../components/Pagination';
 import { usePagination } from '../hooks/usePagination';
+import { getAll } from '../services/firestoreService';
 
 const PAGE_SIZE = 10;
 
-const initialTransactions: Transaction[] = [
-  {
-    id: '1',
-    studentName: 'Aniket Sharma',
-    studentPhone: '+91 98765 43210',
-    pdfTitle: 'Complete Fluid Mechanics Sheet',
-    amount: 199,
-    paymentId: 'pay_Nsh29kSj20',
-    status: 'success',
-    createdAt: '2024-07-08T10:30:00Z'
-  },
-  {
-    id: '2',
-    studentName: 'Priya Verma',
-    studentPhone: '+91 87654 32109',
-    pdfTitle: 'Thermodynamics PYQ Bank',
-    amount: 199,
-    paymentId: 'pay_Msh12kSj20',
-    status: 'failed',
-    createdAt: '2024-07-08T09:15:00Z'
-  },
-  {
-    id: '3',
-    studentName: 'Rahul Gupta',
-    studentPhone: '+91 76543 21098',
-    pdfTitle: 'Machine Design Short Notes',
-    amount: 99,
-    paymentId: 'pay_Osh99kSj20',
-    status: 'pending',
-    createdAt: '2024-07-07T16:45:00Z'
-  },
-  {
-    id: '4',
-    studentName: 'Suresh Kumar',
-    studentPhone: '+91 65432 10987',
-    pdfTitle: 'Industrial Eng Formulas',
-    amount: 149,
-    paymentId: 'pay_Psh88kSj20',
-    status: 'success',
-    createdAt: '2024-07-07T14:20:00Z'
-  }
-];
+interface PurchaseDoc {
+  uid?: string;
+  pdfId?: string;
+  pdfTitle?: string;
+  amount?: number;
+  paymentId?: string;
+  orderId?: string;
+  status?: string;
+  date?: string;
+  createdAt?: unknown;
+}
+
+interface UserDoc {
+  uid?: string;
+  displayName?: string;
+  name?: string;
+  phoneNumber?: string | null;
+  phone?: string;
+}
+
+function toISO(value: unknown): string {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  const anyVal = value as any;
+  if (typeof anyVal?.toDate === 'function') return anyVal.toDate().toISOString();
+  if (typeof anyVal?.seconds === 'number') return new Date(anyVal.seconds * 1000).toISOString();
+  return '';
+}
 
 export default function Transactions() {
-  const [transactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'failed' | 'pending'>('all');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-  const filteredTransactions = transactions.filter(t => {
-    const matchesSearch = 
-      t.studentName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      t.pdfTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.paymentId.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
-    
-    // Simple date filter logic
-    let matchesDate = true;
-    if (dateRange.start) {
-      matchesDate = new Date(t.createdAt) >= new Date(dateRange.start);
-    }
-    if (dateRange.end && matchesDate) {
-      matchesDate = new Date(t.createdAt) <= new Date(dateRange.end);
-    }
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const [purchases, users] = await Promise.all([
+          getAll<PurchaseDoc>('purchases'),
+          getAll<UserDoc>('users').catch(() => [] as (UserDoc & { id: string })[]),
+        ]);
 
-    return matchesSearch && matchesStatus && matchesDate;
-  });
+        const userById: Record<string, UserDoc> = {};
+        users.forEach((u) => {
+          const key = u.uid || (u as any).id;
+          if (key) userById[key] = u;
+        });
+
+        const mapped: Transaction[] = purchases
+          .map((p) => {
+            const u = p.uid ? userById[p.uid] : undefined;
+            return {
+              id: (p as any).id,
+              studentName: u?.displayName || u?.name || 'Student',
+              studentPhone: u?.phoneNumber || u?.phone || '—',
+              pdfTitle: p.pdfTitle || 'PDF',
+              amount: Number(p.amount) || 0,
+              paymentId: p.paymentId || '—',
+              status: (p.status || 'success').toLowerCase() as Transaction['status'],
+              createdAt: p.date || toISO(p.createdAt),
+            };
+          })
+          .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+        if (isMounted) {
+          setTransactions(mapped);
+          setIsLoading(false);
+        }
+      } catch (err: any) {
+        console.error('Failed to load transactions:', err);
+        if (isMounted) {
+          setLoadError(
+            err?.code === 'permission-denied'
+              ? 'You do not have permission to view transactions. Make sure you are signed in as an admin.'
+              : 'Could not load transactions. Please try again.'
+          );
+          setIsLoading(false);
+        }
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredTransactions = useMemo(
+    () =>
+      transactions.filter((t) => {
+        const matchesSearch =
+          t.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          t.pdfTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          t.paymentId.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+
+        let matchesDate = true;
+        if (dateRange.start) matchesDate = new Date(t.createdAt) >= new Date(dateRange.start);
+        if (dateRange.end && matchesDate) matchesDate = new Date(t.createdAt) <= new Date(dateRange.end + 'T23:59:59');
+
+        return matchesSearch && matchesStatus && matchesDate;
+      }),
+    [transactions, searchTerm, statusFilter, dateRange]
+  );
 
   const { pagedItems: pagedTransactions, currentPage, totalPages, setPage } = usePagination(filteredTransactions, PAGE_SIZE);
 
-  const stats = [
-    { label: 'Total Revenue', value: '₹14,250', icon: IndianRupee, color: 'bg-green-500' },
-    { label: 'Sales This Month', value: '₹4,890', icon: TrendingUp, color: 'bg-game-teal' },
-    { label: 'Total Transactions', value: '124', icon: CreditCard, color: 'bg-blue-500' },
-    { label: 'Failed Payments', value: '8', icon: AlertCircle, color: 'bg-red-500' },
-  ];
+  // Real stats computed from successful purchases.
+  const stats = useMemo(() => {
+    const success = transactions.filter((t) => t.status === 'success');
+    const totalRevenue = success.reduce((sum, t) => sum + t.amount, 0);
+    const now = new Date();
+    const thisMonth = success
+      .filter((t) => {
+        const d = new Date(t.createdAt);
+        return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+    const uniqueBuyers = new Set(success.map((t) => t.studentPhone + t.studentName)).size;
+    const inr = (n: number) => '₹' + n.toLocaleString('en-IN');
+    return [
+      { label: 'Total Revenue', value: inr(totalRevenue), icon: IndianRupee, color: 'bg-green-500' },
+      { label: 'This Month', value: inr(thisMonth), icon: TrendingUp, color: 'bg-game-teal' },
+      { label: 'Total Sales', value: String(transactions.length), icon: CreditCard, color: 'bg-blue-500' },
+      { label: 'Unique Buyers', value: String(uniqueBuyers), icon: Users, color: 'bg-indigo-500' },
+    ];
+  }, [transactions]);
 
   const exportToCSV = () => {
-    const headers = ['ID', 'Student', 'Phone', 'Item', 'Amount', 'Payment ID', 'Status', 'Date'];
-    const rows = filteredTransactions.map(t => [
-      t.id, t.studentName, t.studentPhone, t.pdfTitle, t.amount, t.paymentId, t.status, t.createdAt
+    const headers = ['Student', 'Phone', 'Item', 'Amount', 'Payment ID', 'Status', 'Date'];
+    const rows = filteredTransactions.map((t) => [
+      t.studentName, t.studentPhone, t.pdfTitle, t.amount, t.paymentId, t.status, t.createdAt,
     ]);
-    
-    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const csvContent = [headers, ...rows].map((e) => e.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Transactions_${new Date().toLocaleDateString()}.csv`);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Transactions_${new Date().toLocaleDateString()}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -144,9 +195,11 @@ export default function Transactions() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Transactions</h1>
-          <p className="text-slate-500 mt-1">Review and audit all sales transactions and payments.</p>
+          <p className="text-slate-500 mt-1">
+            {isLoading ? 'Loading sales…' : `${transactions.length} recorded ${transactions.length === 1 ? 'sale' : 'sales'}.`}
+          </p>
         </div>
-        <button onClick={exportToCSV} className="btn-secondary">
+        <button onClick={exportToCSV} disabled={isLoading || !!loadError} className="btn-secondary disabled:opacity-50">
           <Download className="w-5 h-5" />
           Export to CSV
         </button>
@@ -155,7 +208,7 @@ export default function Transactions() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
-          <motion.div 
+          <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -163,11 +216,11 @@ export default function Transactions() {
             className="admin-card p-6"
           >
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 ${stat.color} rounded-2xl flex items-center justify-center text-white shadow-lg shadow-${stat.color.split('-')[1]}-200`}>
+              <div className={`w-12 h-12 ${stat.color} rounded-2xl flex items-center justify-center text-white shadow-lg`}>
                 <stat.icon className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-2xl font-black text-slate-900">{stat.value}</p>
+                <p className="text-2xl font-black text-slate-900">{isLoading ? '—' : stat.value}</p>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">{stat.label}</p>
               </div>
             </div>
@@ -179,9 +232,9 @@ export default function Transactions() {
         {/* Filters */}
         <div className="flex flex-col lg:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <input 
-              type="text" 
-              placeholder="Search by student, item or payment ID..." 
+            <input
+              type="text"
+              placeholder="Search by student, item or payment ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-11"
@@ -203,15 +256,15 @@ export default function Transactions() {
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                 className="input-field py-1.5 text-xs w-36"
               />
               <span className="text-slate-300">to</span>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
                 className="input-field py-1.5 text-xs w-36"
@@ -221,62 +274,73 @@ export default function Transactions() {
         </div>
 
         {/* Transactions Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left border-b border-slate-100 text-slate-500 text-sm">
-                <th className="pb-4 font-semibold">Transaction Info</th>
-                <th className="pb-4 font-semibold">Student Details</th>
-                <th className="pb-4 font-semibold">Amount</th>
-                <th className="pb-4 font-semibold">Status</th>
-                <th className="pb-4 font-semibold">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {pagedTransactions.map((t) => {
-                const StatusIcon = getStatusIcon(t.status);
-                return (
-                  <tr key={t.id} className="group hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-800 line-clamp-1">{t.pdfTitle}</span>
-                        <span className="text-[10px] text-slate-400 font-mono mt-0.5 tracking-tighter uppercase">{t.paymentId}</span>
-                      </div>
-                    </td>
-                    <td className="py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-700">{t.studentName}</span>
-                        <span className="text-[11px] text-slate-400">{t.studentPhone}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 font-black text-slate-900">₹{t.amount}</td>
-                    <td className="py-4">
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${getStatusStyles(t.status)}`}>
-                        <StatusIcon className="w-3.5 h-3.5" />
-                        {t.status}
-                      </div>
-                    </td>
-                    <td className="py-4 text-xs text-slate-500 font-medium">
-                      {new Date(t.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {filteredTransactions.length === 0 && (
-            <div className="py-12 text-center text-slate-400">
-              <p>No transactions found matching your criteria.</p>
+        {isLoading ? (
+          <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-game-teal" />
+            <p className="text-sm font-medium">Loading transactions…</p>
+          </div>
+        ) : loadError ? (
+          <div className="py-16 flex flex-col items-center justify-center text-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-red-400" />
             </div>
-          )}
-        </div>
+            <p className="text-sm font-medium text-slate-600 max-w-sm">{loadError}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left border-b border-slate-100 text-slate-500 text-sm">
+                  <th className="pb-4 font-semibold">Transaction Info</th>
+                  <th className="pb-4 font-semibold">Student Details</th>
+                  <th className="pb-4 font-semibold">Amount</th>
+                  <th className="pb-4 font-semibold">Status</th>
+                  <th className="pb-4 font-semibold">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {pagedTransactions.map((t) => {
+                  const StatusIcon = getStatusIcon(t.status);
+                  return (
+                    <tr key={t.id} className="group hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-800 line-clamp-1">{t.pdfTitle}</span>
+                          <span className="text-[10px] text-slate-400 font-mono mt-0.5 tracking-tighter uppercase">{t.paymentId}</span>
+                        </div>
+                      </td>
+                      <td className="py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-700">{t.studentName}</span>
+                          <span className="text-[11px] text-slate-400">{t.studentPhone}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 font-black text-slate-900">₹{t.amount}</td>
+                      <td className="py-4">
+                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${getStatusStyles(t.status)}`}>
+                          <StatusIcon className="w-3.5 h-3.5" />
+                          {t.status}
+                        </div>
+                      </td>
+                      <td className="py-4 text-xs text-slate-500 font-medium">
+                        {t.createdAt
+                          ? new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                          : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {filteredTransactions.length === 0 && (
+              <div className="py-12 text-center text-slate-400">
+                <p>{transactions.length === 0 ? 'No sales yet.' : 'No transactions match your filters.'}</p>
+              </div>
+            )}
+          </div>
+        )}
 
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+        {!isLoading && !loadError && <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />}
       </div>
     </div>
   );

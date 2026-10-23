@@ -311,11 +311,12 @@ export default function Coupons() {
                   <label className="label-text">{form.type === 'percent' ? 'Percent off' : 'Amount off (₹)'}</label>
                   <input
                     type="number"
-                    value={form.value}
-                    onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
+                    value={form.value === 0 ? '' : form.value}
+                    onChange={(e) => setForm({ ...form, value: e.target.value === '' ? 0 : Number(e.target.value) })}
                     className="input-field"
                     min={1}
                     max={form.type === 'percent' ? 100 : undefined}
+                    placeholder="0"
                     required
                   />
                 </div>
@@ -326,8 +327,8 @@ export default function Coupons() {
                   <label className="label-text">Min order (₹) <span className="text-slate-400 font-normal">optional</span></label>
                   <input
                     type="number"
-                    value={form.minAmount}
-                    onChange={(e) => setForm({ ...form, minAmount: Number(e.target.value) })}
+                    value={form.minAmount === 0 ? '' : form.minAmount}
+                    onChange={(e) => setForm({ ...form, minAmount: e.target.value === '' ? 0 : Number(e.target.value) })}
                     className="input-field"
                     min={0}
                     placeholder="0"
@@ -337,8 +338,8 @@ export default function Coupons() {
                   <label className="label-text">Max uses <span className="text-slate-400 font-normal">0 = unlimited</span></label>
                   <input
                     type="number"
-                    value={form.maxUses}
-                    onChange={(e) => setForm({ ...form, maxUses: Number(e.target.value) })}
+                    value={form.maxUses === 0 ? '' : form.maxUses}
+                    onChange={(e) => setForm({ ...form, maxUses: e.target.value === '' ? 0 : Number(e.target.value) })}
                     className="input-field"
                     min={0}
                     placeholder="0"

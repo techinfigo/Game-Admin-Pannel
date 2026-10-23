@@ -239,6 +239,7 @@ export interface Transaction {
   paymentId: string;
   status: 'success' | 'failed' | 'pending';
   createdAt: string;
+  couponCode?: string;
 }
 
 export interface Coupon {

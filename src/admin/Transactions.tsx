@@ -34,6 +34,7 @@ interface PurchaseDoc {
   status?: string;
   date?: string;
   createdAt?: unknown;
+  couponCode?: string;
 }
 
 interface UserDoc {
@@ -88,6 +89,7 @@ export default function Transactions() {
               paymentId: p.paymentId || '—',
               status: (p.status || 'success').toLowerCase() as Transaction['status'],
               createdAt: p.date || toISO(p.createdAt),
+              couponCode: p.couponCode || '',
             };
           })
           .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
@@ -156,9 +158,9 @@ export default function Transactions() {
   }, [transactions]);
 
   const exportToCSV = () => {
-    const headers = ['Student', 'Phone', 'Item', 'Amount', 'Payment ID', 'Status', 'Date'];
+    const headers = ['Student', 'Phone', 'Item', 'Amount', 'Coupon', 'Payment ID', 'Status', 'Date'];
     const rows = filteredTransactions.map((t) => [
-      t.studentName, t.studentPhone, t.pdfTitle, t.amount, t.paymentId, t.status, t.createdAt,
+      t.studentName, t.studentPhone, t.pdfTitle, t.amount, t.couponCode || '', t.paymentId, t.status, t.createdAt,
     ]);
     const csvContent = [headers, ...rows].map((e) => e.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -294,6 +296,7 @@ export default function Transactions() {
                   <th className="pb-4 font-semibold">Transaction Info</th>
                   <th className="pb-4 font-semibold">Student Details</th>
                   <th className="pb-4 font-semibold">Amount</th>
+                  <th className="pb-4 font-semibold">Coupon</th>
                   <th className="pb-4 font-semibold">Status</th>
                   <th className="pb-4 font-semibold">Date</th>
                 </tr>
@@ -316,6 +319,13 @@ export default function Transactions() {
                         </div>
                       </td>
                       <td className="py-4 font-black text-slate-900">₹{t.amount}</td>
+                      <td className="py-4">
+                        {t.couponCode ? (
+                          <span className="inline-block px-2 py-1 rounded-lg bg-game-teal/10 text-game-teal text-[10px] font-black uppercase tracking-wider">{t.couponCode}</span>
+                        ) : (
+                          <span className="text-slate-300 text-xs">—</span>
+                        )}
+                      </td>
                       <td className="py-4">
                         <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${getStatusStyles(t.status)}`}>
                           <StatusIcon className="w-3.5 h-3.5" />

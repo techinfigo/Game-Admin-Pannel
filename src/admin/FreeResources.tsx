@@ -330,8 +330,8 @@ export default function FreeResources() {
                       className="input-field" required
                     >
                       <option value="free">Free Resource</option>
-                      <option value="paid">Paid Content / Pitara</option>
                     </select>
+                    <p className="text-[10px] text-slate-400 mt-1">Paid content is sold through the PDF Store, not here.</p>
                   </div>
                   <div>
                     <label className="label-text">Category</label>

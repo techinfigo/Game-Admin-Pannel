@@ -12,7 +12,7 @@ import {
   Trash2,
   X,
   Upload,
-  DollarSign,
+  IndianRupee,
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
@@ -346,7 +346,7 @@ export default function PdfStore() {
                         <label className="label-text">Price (₹)</label>
                         <div className="relative">
                           <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} className="input-field pl-10" placeholder="0" min="1" required />
-                          <DollarSign className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <IndianRupee className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         </div>
                       </div>
                     )}

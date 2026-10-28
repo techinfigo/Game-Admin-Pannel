@@ -17,7 +17,7 @@ import {
   X,
   Upload,
   ExternalLink,
-  DollarSign,
+  IndianRupee,
   Tag as TagIcon,
   Zap
 } from 'lucide-react';
@@ -414,7 +414,7 @@ export default function FreeResources() {
                             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                             className="input-field pl-10" placeholder="e.g. Rs. 2,999" 
                           />
-                          <DollarSign className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <IndianRupee className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         </div>
                       </div>
                       <div className="md:col-span-2">

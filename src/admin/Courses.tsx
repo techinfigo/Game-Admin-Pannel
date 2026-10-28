@@ -8,7 +8,7 @@ import {
   Plus,
   Search,
   GraduationCap,
-  DollarSign,
+  IndianRupee,
   Link as LinkIcon,
   Edit2,
   Trash2,
@@ -460,7 +460,7 @@ export default function Courses() {
                 {/* Pricing Section */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-game-teal font-bold text-sm uppercase tracking-wider">
-                    <DollarSign className="w-4 h-4" />
+                    <IndianRupee className="w-4 h-4" />
                     Pricing & Offers
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

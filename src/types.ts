@@ -187,6 +187,7 @@ export interface HeroSlide {
 export interface CourseBanner {
   id: string;
   imageUrl: string;
+  linkUrl?: string; // optional click-through target when the banner is clicked
   order: number;
   active: boolean;
   createdAt?: string;

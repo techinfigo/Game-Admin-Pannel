@@ -276,6 +276,18 @@ export default function CourseBanners() {
                   )}
                 />
 
+                <div>
+                  <label className="label-text">Link URL <span className="font-normal text-slate-400">(optional — where the banner goes when clicked)</span></label>
+                  <input
+                    type="text"
+                    value={formData.linkUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
+                    className="input-field"
+                    placeholder="/courses  or  https://..."
+                  />
+                  <p className="text-xs text-slate-400 mt-1">Use a site path like <code>/courses</code> for an internal page, or a full <code>https://</code> link to open in a new tab. Leave blank for no link.</p>
+                </div>
+
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                   <div className="flex items-center gap-2">
                     <label className="label-text mb-0">Display Order</label>

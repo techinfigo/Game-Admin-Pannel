@@ -13,6 +13,7 @@ import ImageUploadField from '../components/ImageUploadField';
 const DEFAULT_SETTINGS: SiteSettings = {
   logoUrl: '',
   faviconUrl: '',
+  pitaraImage: '',
   phone: '+91 98765 43210',
   whatsappNumber: '+91 98765 43210',
   email: 'contact@gameacademy.in',
@@ -129,6 +130,13 @@ export default function SiteSettingsPage() {
               onChange={(url) => setSettings(prev => ({ ...prev, faviconUrl: url }))}
               folder="branding"
               hint="Recommended: 64 × 64 px square (PNG)"
+            />
+            <ImageUploadField
+              label="Knowledge Pitara Image"
+              value={settings.pitaraImage}
+              onChange={(url) => setSettings(prev => ({ ...prev, pitaraImage: url }))}
+              folder="branding"
+              hint="Shown in the homepage 'Start Your Preparation Today' section. Portrait image (2:3), e.g. 600 × 900 px."
             />
           </div>
         </section>

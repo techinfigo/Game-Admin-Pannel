@@ -6,6 +6,7 @@
 export interface SiteSettings {
   logoUrl: string;
   faviconUrl: string;
+  pitaraImage: string;
   phone: string;
   whatsappNumber: string;
   email: string;

@@ -417,10 +417,20 @@ export default function Courses() {
                     </div>
                     <div className="md:col-span-2">
                       <label className="label-text">Tagline / Short Description</label>
-                      <textarea 
+                      <textarea
                         value={formData.tagline}
                         onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
-                        className="input-field min-h-[80px]" placeholder="Briefly describe what this course offers..." required 
+                        className="input-field min-h-[80px]" placeholder="Briefly describe what this course offers..." required
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="label-text">Display Order <span className="font-normal text-slate-400">(lower number shows first; leave blank for last)</span></label>
+                      <input
+                        type="number"
+                        value={formData.order ?? ''}
+                        onChange={(e) => setFormData({ ...formData, order: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        className="input-field"
+                        placeholder="e.g. 1, 2, 3..."
                       />
                     </div>
                     <div>

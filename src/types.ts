@@ -77,6 +77,7 @@ export interface Course {
   liveCount: string;     // e.g. "350"
   features: string[];
   enrollLink: string;    // e.g. https://courses.gameacademy.in/wlp/...
+  order?: number;        // display order on the website (lower shows first)
   createdAt?: string;
 }
 

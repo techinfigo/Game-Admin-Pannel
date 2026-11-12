@@ -15,7 +15,18 @@ import {
   Link2,
   Quote,
   Eraser,
+  Type,
 } from 'lucide-react';
+
+// Font-size presets the client can apply to selected text. Values are absolute
+// (rem) so the size is identical in the editor and on the live blog page, where
+// the inline style overrides the site's default paragraph size.
+const FONT_SIZES: { label: string; css: string }[] = [
+  { label: 'Small', css: '1rem' },
+  { label: 'Normal', css: '' },      // '' = remove any applied size (back to site default)
+  { label: 'Large', css: '1.6rem' },
+  { label: 'X-Large', css: '2.1rem' },
+];
 
 interface RichTextEditorProps {
   value: string;
@@ -109,6 +120,9 @@ function plainTextToHtml(text: string): string {
  */
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder }) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  // Last selection range that was inside the editor. Clicking a toolbar control
+  // like the size dropdown moves focus out of the editor, so we restore this.
+  const savedRange = useRef<Range | null>(null);
   // Which formats apply to the current cursor/selection, so the toolbar can
   // show which buttons are "on".
   const [active, setActive] = useState<Record<string, boolean>>({});
@@ -123,6 +137,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       setActive({});
       return;
     }
+    // Remember the live selection so toolbar controls that steal focus can restore it.
+    savedRange.current = sel.getRangeAt(0).cloneRange();
     let block = '';
     try {
       block = (document.queryCommandValue('formatBlock') || '').toString().toLowerCase();
@@ -191,6 +207,44 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     refreshActive();
   };
 
+  // Apply (or clear) a font size on the current selection. Wraps the selected
+  // text in a <span style="font-size:…">, which the blog page renders as-is.
+  const applyFontSize = (css: string) => {
+    const el = editorRef.current;
+    if (!el) return;
+    el.focus();
+    const sel = window.getSelection();
+    // The dropdown took focus, so the live selection is gone — restore the last
+    // one that was inside the editor.
+    if (sel && savedRange.current && (sel.rangeCount === 0 || !el.contains(sel.anchorNode))) {
+      sel.removeAllRanges();
+      sel.addRange(savedRange.current);
+    }
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !el.contains(sel.anchorNode)) return;
+
+    // Use the browser's own selection wrapping (handles multi-node selections),
+    // then convert the marker into a clean styled span, or unwrap it for Normal.
+    // eslint-disable-next-line deprecation/deprecation
+    document.execCommand('fontSize', false, '7');
+    el.querySelectorAll('font[size="7"]').forEach((marker) => {
+      const m = marker as HTMLElement;
+      if (css) {
+        const span = document.createElement('span');
+        span.style.fontSize = css;
+        while (m.firstChild) span.appendChild(m.firstChild);
+        m.replaceWith(span);
+      } else {
+        // Normal: remove sizing — also strip any inline font-size on inner spans.
+        const frag = document.createDocumentFragment();
+        while (m.firstChild) frag.appendChild(m.firstChild);
+        frag.querySelectorAll?.('span[style*="font-size"]').forEach((s) => (s as HTMLElement).style.removeProperty('font-size'));
+        m.replaceWith(frag);
+      }
+    });
+    emitChange();
+    refreshActive();
+  };
+
   const addLink = () => {
     // Keep the current selection so the prompt dialog doesn't lose it.
     const sel = window.getSelection();
@@ -208,12 +262,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     if (!saved || saved.collapsed) {
       // Nothing selected — drop the URL in as a fresh clickable link.
       // eslint-disable-next-line deprecation/deprecation
-      document.execCommand('insertHTML', false, `<a href="${escapeAttr(href)}">${escapeHtml(url)}</a>`);
-      emitChange();
-      refreshActive();
+      document.execCommand('insertHTML', false, `<a href="${escapeAttr(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`);
     } else {
-      exec('createLink', href);
+      // eslint-disable-next-line deprecation/deprecation
+      document.execCommand('createLink', false, href);
     }
+    // Make every link open in a new tab (createLink doesn't set target itself).
+    editorRef.current?.querySelectorAll('a').forEach((a) => {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
+    });
+    emitChange();
+    refreshActive();
   };
 
   const buttons: { icon: React.ElementType; title: string; action: () => void; activeKey?: string }[] = [
@@ -233,6 +293,23 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     <div className="rounded-xl border border-slate-200 overflow-hidden focus-within:border-game-teal focus-within:ring-2 focus-within:ring-game-teal/20 transition-all">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 bg-slate-50 border-b border-slate-200 px-2 py-1.5">
+        {/* Font size */}
+        <div className="flex items-center gap-1 pr-1">
+          <Type className="w-4 h-4 text-slate-400" />
+          <select
+            title="Text size"
+            aria-label="Text size"
+            defaultValue=""
+            onChange={(e) => { const v = e.target.value; applyFontSize(v === '__normal' ? '' : v); e.target.selectedIndex = 0; }}
+            className="h-8 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg px-2 cursor-pointer hover:border-game-teal focus:outline-none focus:border-game-teal"
+          >
+            <option value="" disabled>Size</option>
+            {FONT_SIZES.map((f) => (
+              <option key={f.label} value={f.css === '' ? '__normal' : f.css}>{f.label}</option>
+            ))}
+          </select>
+          <span className="w-px h-5 bg-slate-200 mx-1" />
+        </div>
         {buttons.map(({ icon: Icon, title, action, activeKey }, i) => {
           const isActive = !!activeKey && active[activeKey];
           return (

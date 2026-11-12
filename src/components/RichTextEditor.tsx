@@ -28,6 +28,23 @@ const FONT_SIZES: { label: string; css: string }[] = [
   { label: 'X-Large', css: '2.1rem' },
 ];
 
+// Font families the client can pick (like Gmail). All are web-safe system fonts,
+// so they render identically on the live blog page without loading web fonts.
+const FONT_FAMILIES: { label: string; css: string }[] = [
+  { label: 'Sans Serif', css: 'Arial, Helvetica, sans-serif' },
+  { label: 'Serif', css: 'Georgia, "Times New Roman", serif' },
+  { label: 'Fixed Width', css: '"Courier New", Courier, monospace' },
+  { label: 'Wide', css: '"Arial Black", Gadget, sans-serif' },
+  { label: 'Narrow', css: '"Arial Narrow", Arial, sans-serif' },
+  { label: 'Comic Sans MS', css: '"Comic Sans MS", "Comic Sans", cursive' },
+  { label: 'Garamond', css: 'Garamond, Georgia, serif' },
+  { label: 'Georgia', css: 'Georgia, serif' },
+  { label: 'Tahoma', css: 'Tahoma, Geneva, sans-serif' },
+  { label: 'Trebuchet MS', css: '"Trebuchet MS", Helvetica, sans-serif' },
+  { label: 'Verdana', css: 'Verdana, Geneva, sans-serif' },
+  { label: 'Times New Roman', css: '"Times New Roman", Times, serif' },
+];
+
 interface RichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
@@ -245,6 +262,33 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     refreshActive();
   };
 
+  // Apply a font family to the current selection, wrapping it in a
+  // <span style="font-family:…"> that the blog page renders as-is.
+  const applyFontFamily = (css: string) => {
+    const el = editorRef.current;
+    if (!el || !css) return;
+    el.focus();
+    const sel = window.getSelection();
+    if (sel && savedRange.current && (sel.rangeCount === 0 || !el.contains(sel.anchorNode))) {
+      sel.removeAllRanges();
+      sel.addRange(savedRange.current);
+    }
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !el.contains(sel.anchorNode)) return;
+
+    // eslint-disable-next-line deprecation/deprecation
+    document.execCommand('fontName', false, css);
+    // Convert the browser's <font face="…"> markers into clean styled spans.
+    el.querySelectorAll('font[face]').forEach((marker) => {
+      const m = marker as HTMLElement;
+      const span = document.createElement('span');
+      span.style.fontFamily = m.getAttribute('face') || css;
+      while (m.firstChild) span.appendChild(m.firstChild);
+      m.replaceWith(span);
+    });
+    emitChange();
+    refreshActive();
+  };
+
   const addLink = () => {
     // Keep the current selection so the prompt dialog doesn't lose it.
     const sel = window.getSelection();
@@ -293,6 +337,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     <div className="rounded-xl border border-slate-200 overflow-hidden focus-within:border-game-teal focus-within:ring-2 focus-within:ring-game-teal/20 transition-all">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 bg-slate-50 border-b border-slate-200 px-2 py-1.5">
+        {/* Font family */}
+        <div className="flex items-center gap-1 pr-1">
+          <select
+            title="Font"
+            aria-label="Font"
+            defaultValue=""
+            onChange={(e) => { applyFontFamily(e.target.value); e.target.selectedIndex = 0; }}
+            className="h-8 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg px-2 cursor-pointer hover:border-game-teal focus:outline-none focus:border-game-teal max-w-[120px]"
+          >
+            <option value="" disabled>Font</option>
+            {FONT_FAMILIES.map((f) => (
+              <option key={f.label} value={f.css} style={{ fontFamily: f.css }}>{f.label}</option>
+            ))}
+          </select>
+          <span className="w-px h-5 bg-slate-200 mx-1" />
+        </div>
         {/* Font size */}
         <div className="flex items-center gap-1 pr-1">
           <Type className="w-4 h-4 text-slate-400" />

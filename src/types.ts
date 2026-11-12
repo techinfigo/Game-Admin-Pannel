@@ -158,6 +158,15 @@ export interface Faculty {
   bio?: string;
 }
 
+export interface StrategyVideo {
+  id: string;
+  title: string;
+  category: string;     // filter label on the Strategy page, e.g. "Exam Strategy"
+  youtubeUrl: string;   // full YouTube link; thumbnail is auto-pulled from it
+  order?: number;
+  createdAt?: string;
+}
+
 export interface VideoLecture {
   id: string;
   title: string;

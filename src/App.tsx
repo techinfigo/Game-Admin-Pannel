@@ -24,6 +24,7 @@ const Reviews = React.lazy(() => import('./admin/Reviews'));
 const Blog = React.lazy(() => import('./admin/Blog'));
 const Faculty = React.lazy(() => import('./admin/Faculty'));
 const VideoLectures = React.lazy(() => import('./admin/VideoLectures'));
+const StrategyVideos = React.lazy(() => import('./admin/StrategyVideos'));
 const HeroSlides = React.lazy(() => import('./admin/HeroSlides'));
 const ExamPages = React.lazy(() => import('./admin/ExamPages'));
 const CourseBanners = React.lazy(() => import('./admin/CourseBanners'));
@@ -123,6 +124,11 @@ export default function App() {
             <Route path="lectures" element={
               <React.Suspense fallback={<Loading />}>
                 <VideoLectures />
+              </React.Suspense>
+            } />
+            <Route path="strategy-videos" element={
+              <React.Suspense fallback={<Loading />}>
+                <StrategyVideos />
               </React.Suspense>
             } />
             <Route path="hero" element={

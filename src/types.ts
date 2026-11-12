@@ -158,6 +158,14 @@ export interface Faculty {
   bio?: string;
 }
 
+export interface FeedbackScreenshot {
+  id: string;
+  imageUrl: string;     // the WhatsApp/feedback screenshot shown in the phone slider
+  caption?: string;     // optional caption under the screenshot
+  order?: number;
+  createdAt?: string;
+}
+
 export interface StrategyVideo {
   id: string;
   title: string;

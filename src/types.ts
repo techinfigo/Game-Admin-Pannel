@@ -52,6 +52,8 @@ export interface JobUpdate {
   pdfLink: string;
   usefulLinks: string;
   recommendedCourse: string;
+  vacancies?: string;   // e.g. "8,868 Posts"
+  ageLimit?: string;    // e.g. "18–33 years"
   createdAt?: string;
 }
 

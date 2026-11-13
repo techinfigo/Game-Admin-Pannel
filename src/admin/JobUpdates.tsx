@@ -44,7 +44,9 @@ export default function JobUpdates() {
     status: 'Yet to start',
     pdfLink: '',
     usefulLinks: '',
-    recommendedCourse: ''
+    recommendedCourse: '',
+    vacancies: '',
+    ageLimit: ''
   });
 
   const [branchInput, setBranchInput] = useState('');
@@ -89,7 +91,9 @@ export default function JobUpdates() {
     status: 'Yet to start',
     pdfLink: '',
     usefulLinks: '',
-    recommendedCourse: ''
+    recommendedCourse: '',
+    vacancies: '',
+    ageLimit: ''
   };
 
   const handleOpenModal = (job?: JobUpdate) => {
@@ -179,6 +183,24 @@ export default function JobUpdates() {
     }
   };
 
+  // A job whose End Date has passed shows as "Closed" automatically (matching the
+  // website), so an expired notification isn't still displayed as Open here.
+  const isExpired = (endDate?: string): boolean => {
+    if (!endDate) return false;
+    const raw = String(endDate).trim();
+    let t = Date.parse(raw);
+    if (Number.isNaN(t)) {
+      const m = raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/); // dd-mm-yyyy
+      if (m) t = new Date(+m[3], +m[2] - 1, +m[1]).getTime();
+    }
+    if (Number.isNaN(t)) return false;
+    const end = new Date(t);
+    end.setHours(23, 59, 59, 999);
+    return end.getTime() < Date.now();
+  };
+  const effectiveStatus = (job: JobUpdate): JobStatus =>
+    isExpired(job.endDate) ? 'Closed' : job.status;
+
   const filteredJobs = jobs.filter(j =>
     j.notification.toLowerCase().includes(searchTerm.toLowerCase()) ||
     j.eligibility.toLowerCase().includes(searchTerm.toLowerCase())
@@ -237,7 +259,7 @@ export default function JobUpdates() {
 
         <div className="grid grid-cols-1 gap-4">
           {visibleJobs.map((job) => {
-            const StatusIcon = getStatusIcon(job.status);
+            const StatusIcon = getStatusIcon(effectiveStatus(job));
             return (
               <motion.div 
                 key={job.id}
@@ -252,9 +274,9 @@ export default function JobUpdates() {
                     <div>
                       <div className="flex items-center gap-3">
                         <h3 className="font-bold text-lg text-slate-900">{job.notification}</h3>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center gap-1 ${getStatusStyle(job.status)}`}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center gap-1 ${getStatusStyle(effectiveStatus(job))}`}>
                           <StatusIcon className="w-3 h-3" />
-                          {job.status}
+                          {effectiveStatus(job)}
                         </span>
                       </div>
                       <p className="text-slate-500 text-sm mt-1">{job.eligibility}</p>
@@ -332,9 +354,29 @@ export default function JobUpdates() {
                     />
                   </div>
                   <div className="md:col-span-2">
+                    <label className="label-text">Vacancies / No. of Posts</label>
+                    <input
+                      type="text"
+                      value={formData.vacancies || ''}
+                      onChange={(e) => setFormData({ ...formData, vacancies: e.target.value })}
+                      className="input-field"
+                      placeholder="e.g. 8,868 Posts"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-text">Age Limit</label>
+                    <input
+                      type="text"
+                      value={formData.ageLimit || ''}
+                      onChange={(e) => setFormData({ ...formData, ageLimit: e.target.value })}
+                      className="input-field"
+                      placeholder="e.g. 18–33 years"
+                    />
+                  </div>
+                  <div>
                     <label className="label-text">Eligibility Criteria</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={formData.eligibility}
                       onChange={(e) => setFormData({ ...formData, eligibility: e.target.value })}
                       className="input-field" required 

@@ -52,8 +52,8 @@ export interface JobUpdate {
   pdfLink: string;
   usefulLinks: string;
   recommendedCourse: string;
-  vacancies?: string;   // e.g. "8,868 Posts"
-  ageLimit?: string;    // e.g. "18–33 years"
+  selectionProcedure?: string; // hidden on card until expanded; e.g. "CBT 1 → CBT 2 → DV"
+  payScale?: string;           // hidden on card until expanded; e.g. "Level 6, ₹35,400–1,12,400"
   createdAt?: string;
 }
 

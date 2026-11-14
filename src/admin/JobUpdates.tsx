@@ -45,8 +45,8 @@ export default function JobUpdates() {
     pdfLink: '',
     usefulLinks: '',
     recommendedCourse: '',
-    vacancies: '',
-    ageLimit: ''
+    selectionProcedure: '',
+    payScale: ''
   });
 
   const [branchInput, setBranchInput] = useState('');
@@ -92,8 +92,8 @@ export default function JobUpdates() {
     pdfLink: '',
     usefulLinks: '',
     recommendedCourse: '',
-    vacancies: '',
-    ageLimit: ''
+    selectionProcedure: '',
+    payScale: ''
   };
 
   const handleOpenModal = (job?: JobUpdate) => {
@@ -354,23 +354,23 @@ export default function JobUpdates() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="label-text">Vacancies / No. of Posts</label>
+                    <label className="label-text">Pay Scale / Salary <span className="text-xs font-normal text-slate-400">(hidden on the card until a visitor clicks "View details")</span></label>
                     <input
                       type="text"
-                      value={formData.vacancies || ''}
-                      onChange={(e) => setFormData({ ...formData, vacancies: e.target.value })}
+                      value={formData.payScale || ''}
+                      onChange={(e) => setFormData({ ...formData, payScale: e.target.value })}
                       className="input-field"
-                      placeholder="e.g. 8,868 Posts"
+                      placeholder="e.g. Level 6, ₹35,400 – 1,12,400 per month"
                     />
                   </div>
-                  <div>
-                    <label className="label-text">Age Limit</label>
-                    <input
-                      type="text"
-                      value={formData.ageLimit || ''}
-                      onChange={(e) => setFormData({ ...formData, ageLimit: e.target.value })}
+                  <div className="md:col-span-2">
+                    <label className="label-text">Selection Procedure <span className="text-xs font-normal text-slate-400">(hidden on the card until a visitor clicks "View details")</span></label>
+                    <textarea
+                      rows={2}
+                      value={formData.selectionProcedure || ''}
+                      onChange={(e) => setFormData({ ...formData, selectionProcedure: e.target.value })}
                       className="input-field"
-                      placeholder="e.g. 18–33 years"
+                      placeholder="e.g. CBT 1 → CBT 2 → Document Verification → Medical"
                     />
                   </div>
                   <div>

@@ -20,6 +20,24 @@ export interface SiteSettings {
   androidAppLink: string;
   iosAppLink: string;
   address: string;
+  mentorship1on1Fee?: number;   // ₹ amount for the About-page 1:1 Mentorship button
+}
+
+export interface MentorshipLead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  branch?: string;
+  message?: string;
+  amount?: number;
+  status: 'pending' | 'paid' | 'failed';
+  paymentId?: string;
+  orderId?: string;
+  failReason?: string;
+  emailSent?: boolean;
+  createdAt?: string;
+  paidAt?: string;
 }
 
 export type ResourceType = 'pdf' | 'video' | 'note' | 'link';

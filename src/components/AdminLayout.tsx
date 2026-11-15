@@ -25,6 +25,7 @@ import {
   Video,
   Lightbulb,
   MessageSquare,
+  HeartHandshake,
   MonitorPlay,
   GalleryHorizontalEnd,
   ShoppingBag,
@@ -70,6 +71,7 @@ const navGroups = [
       { path: '/admin/coupons', icon: Ticket, label: 'Coupons' },
       { path: '/admin/students', icon: UserCheck, label: 'Students' },
       { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
+      { path: '/admin/mentorship-leads', icon: HeartHandshake, label: '1:1 Mentorship' },
       { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
     ]
   },

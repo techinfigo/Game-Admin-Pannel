@@ -154,16 +154,33 @@ export default function SiteSettingsPage() {
             <div>
               <label className="label-text">Phone Number</label>
               <div className="relative">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   name="phone"
                   value={settings.phone}
                   onChange={handleInputChange}
-                  className="input-field pl-10" 
+                  className="input-field pl-10"
                   required
                 />
                 <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               </div>
+            </div>
+
+            <div>
+              <label className="label-text">1:1 Mentorship Fee (₹)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={0}
+                  name="mentorship1on1Fee"
+                  value={settings.mentorship1on1Fee ?? ''}
+                  onChange={handleInputChange}
+                  className="input-field pl-10"
+                  placeholder="e.g. 999"
+                />
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Amount charged on the About page “1:1 Mentorship” button.</p>
             </div>
 
             <div>

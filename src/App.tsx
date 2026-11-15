@@ -33,6 +33,7 @@ const PdfStore = React.lazy(() => import('./admin/PdfStore'));
 const Students = React.lazy(() => import('./admin/Students'));
 const Transactions = React.lazy(() => import('./admin/Transactions'));
 const MentorshipLeads = React.lazy(() => import('./admin/MentorshipLeads'));
+const CallRequests = React.lazy(() => import('./admin/CallRequests'));
 const Coupons = React.lazy(() => import('./admin/Coupons'));
 
 const Loading = () => (
@@ -166,6 +167,11 @@ export default function App() {
             <Route path="mentorship-leads" element={
               <React.Suspense fallback={<Loading />}>
                 <MentorshipLeads />
+              </React.Suspense>
+            } />
+            <Route path="call-requests" element={
+              <React.Suspense fallback={<Loading />}>
+                <CallRequests />
               </React.Suspense>
             } />
             <Route path="coupons" element={

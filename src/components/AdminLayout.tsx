@@ -26,6 +26,7 @@ import {
   Lightbulb,
   MessageSquare,
   HeartHandshake,
+  PhoneCall,
   MonitorPlay,
   GalleryHorizontalEnd,
   ShoppingBag,
@@ -72,6 +73,7 @@ const navGroups = [
       { path: '/admin/students', icon: UserCheck, label: 'Students' },
       { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
       { path: '/admin/mentorship-leads', icon: HeartHandshake, label: '1:1 Mentorship' },
+      { path: '/admin/call-requests', icon: PhoneCall, label: 'Call Requests' },
       { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
     ]
   },

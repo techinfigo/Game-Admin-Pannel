@@ -5,7 +5,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Loader2, Phone, RefreshCw, GraduationCap } from 'lucide-react';
-import { getAll } from '../services/firestoreService';
+import { fetchLeads } from '../services/leadsService';
 
 interface CallbackRequest {
   id: string;
@@ -32,7 +32,7 @@ export default function CallRequests() {
 
   const load = () => {
     setLoading(true);
-    getAll<CallbackRequest>('callbackRequests')
+    fetchLeads<CallbackRequest>('callbackRequests')
       .then((list) => {
         list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
         setRows(list);

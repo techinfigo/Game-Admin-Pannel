@@ -5,7 +5,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Loader2, CheckCircle2, XCircle, Clock, IndianRupee, Mail, Phone, RefreshCw } from 'lucide-react';
-import { getAll } from '../services/firestoreService';
+import { fetchLeads } from '../services/leadsService';
 
 interface MentorshipLead {
   id: string;
@@ -44,7 +44,7 @@ export default function MentorshipLeads() {
 
   const load = () => {
     setLoading(true);
-    getAll<MentorshipLead>('mentorshipLeads')
+    fetchLeads<MentorshipLead>('mentorshipLeads')
       .then((rows) => {
         rows.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
         setLeads(rows);

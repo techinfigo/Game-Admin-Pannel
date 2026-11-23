@@ -35,6 +35,7 @@ const Transactions = React.lazy(() => import('./admin/Transactions'));
 const MentorshipLeads = React.lazy(() => import('./admin/MentorshipLeads'));
 const CallRequests = React.lazy(() => import('./admin/CallRequests'));
 const Coupons = React.lazy(() => import('./admin/Coupons'));
+const PageContent = React.lazy(() => import('./admin/PageContent'));
 
 const Loading = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -177,6 +178,11 @@ export default function App() {
             <Route path="coupons" element={
               <React.Suspense fallback={<Loading />}>
                 <Coupons />
+              </React.Suspense>
+            } />
+            <Route path="page-content" element={
+              <React.Suspense fallback={<Loading />}>
+                <PageContent />
               </React.Suspense>
             } />
           </Route>

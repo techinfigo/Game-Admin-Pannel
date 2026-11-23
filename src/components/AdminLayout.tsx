@@ -62,6 +62,7 @@ const navGroups = [
       { path: '/admin/lectures', icon: Video, label: 'Video Lectures' },
       { path: '/admin/strategy-videos', icon: Lightbulb, label: 'Strategy Videos' },
       { path: '/admin/resources', icon: FileText, label: 'Free Resources' },
+      { path: '/admin/page-content', icon: FileStack, label: 'Exam Page Content' },
       { path: '/admin/blog', icon: BookOpen, label: 'Blog' },
     ]
   },

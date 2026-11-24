@@ -13,9 +13,12 @@ interface ExamCard { route: string; eligibility: string; status: string; tone: s
 interface Faq { q: string; a: string; }
 interface NonTechDoc { lastChecked: string; updates: UpdateRow[]; examCards: ExamCard[]; faqs: Faq[]; }
 interface SchoolDoc { faqs: Faq[]; }
+interface IitUpdate { exam: string; update: string; status: string; tone: string; }
+interface IitDoc { lastChecked: string; deadlineNote: string; updates: IitUpdate[]; faqs: Faq[]; }
 
 const TONES = ['open', 'waiting', 'upcoming', 'closed'];
 const ROUTES = ['recruitment', 'engineering'];
+const IIT_TONES = ['announced', 'reported', 'awaited', 'notconfirmed'];
 
 // Current live defaults — the editor pre-fills with these so the client edits
 // the real content rather than a blank form. Keep in sync with the website.
@@ -56,6 +59,29 @@ const DEFAULT_SCHOOL: SchoolDoc = {
   ],
 };
 
+const DEFAULT_IIT: IitDoc = {
+  lastChecked: '24 Nov 2026',
+  deadlineNote: 'JEE Main Session 1: the late-fee window ends on 26 November 2026. Confirm on jeemain.nta.nic.in.',
+  updates: [
+    { exam: 'JEE Main 2027 · Session 1 · Application', update: 'Regular window closed on 22 Nov 2026. A late-fee window (₹500 plus the application fee) is reported for 23–28 Nov. Corrections 27–29 Nov.', status: 'Reported', tone: 'reported' },
+    { exam: 'JEE Main 2027 · Session 1 · Exam', update: '20, 21, 22, 23, 24 and 28 January 2027, in two shifts (9 am–12 pm and 3 pm–6 pm). Admit card not yet released.', status: 'Dates announced', tone: 'announced' },
+    { exam: 'JEE Main 2027 · Session 2', update: 'Applications 5 Jan–3 Feb 2027, exam 2–7 April 2027, as per the reported NTA calendar.', status: 'Reported', tone: 'reported' },
+    { exam: 'JEE Advanced 2027', update: 'Exam on 23 May 2027, conducted by IIT Delhi. A basic on-screen calculator is allowed. Registration dates are not announced yet.', status: 'Date announced', tone: 'announced' },
+    { exam: 'NEET UG 2027 · Dates', update: 'NTA has not published the notification, application window or exam date. Some media expect an early-May exam, but this is unofficial.', status: 'Awaited', tone: 'awaited' },
+    { exam: 'NEET UG 2027 · Mode', update: 'The Education Minister said in May 2026 that NEET will be computer-based from 2027. A 4 Nov 2026 report says the mode is not finalised and the exam-reform task force has been given time till January 2027.', status: 'Not confirmed', tone: 'notconfirmed' },
+  ],
+  faqs: [
+    { q: 'When is JEE Main 2027?', a: 'Session 1 is on 20, 21, 22, 23, 24 and 28 January 2027. Session 2 is reported for 2–7 April 2027. Confirm on jeemain.nta.nic.in.' },
+    { q: 'Can I still apply for JEE Main Session 1?', a: 'The regular window closed on 22 Nov 2026. A late-fee window is reported until 26–28 Nov. Check the official site for the exact closing date and fee.' },
+    { q: 'When is JEE Advanced 2027?', a: 'Reported for 23 May 2027, conducted by IIT Delhi. Registration dates are not announced yet.' },
+    { q: 'How many attempts do I get?', a: 'JEE Main: up to three consecutive years. JEE Advanced: a maximum of two attempts in two consecutive years. NEET UG: no cap on attempts in recent notices.' },
+    { q: 'When is NEET UG 2027?', a: 'NTA has not published the notification or exam date yet. Some media expect an early-May exam, but this is unofficial until the bulletin is out.' },
+    { q: 'Will NEET UG 2027 be computer-based?', a: 'Not confirmed. A CBT shift from 2027 was announced in 2026, but a later report says it is not finalised. Wait for NTA’s bulletin.' },
+    { q: 'Can I take both JEE and NEET?', a: 'Yes, if you meet each exam’s eligibility and the dates don’t clash. JEE leads to engineering; NEET leads to medical, dental and AYUSH.' },
+    { q: 'Is this an official notice?', a: 'No. This page is a general guide. Exam dates and rules are set by NTA, IIT Delhi, JoSAA and MCC, and can change.' },
+  ],
+};
+
 // ---- small UI helpers ----
 const label = 'block text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1';
 const input = 'w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-game-teal outline-none';
@@ -93,9 +119,10 @@ function CardShell({ children, onRemove, index }: React.PropsWithChildren<{ onRe
 }
 
 export default function PageContent() {
-  const [tab, setTab] = useState<'nontech' | 'school'>('nontech');
+  const [tab, setTab] = useState<'nontech' | 'school' | 'iit'>('nontech');
   const [nt, setNt] = useState<NonTechDoc>(DEFAULT_NONTECH);
   const [school, setSchool] = useState<SchoolDoc>(DEFAULT_SCHOOL);
+  const [iit, setIit] = useState<IitDoc>(DEFAULT_IIT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState('');
@@ -105,9 +132,11 @@ export default function PageContent() {
     Promise.all([
       getSingle<NonTechDoc>('pageContent', 'nontech'),
       getSingle<SchoolDoc>('pageContent', 'school'),
-    ]).then(([n, s]) => {
+      getSingle<IitDoc>('pageContent', 'iit'),
+    ]).then(([n, s, i]) => {
       if (n && Array.isArray(n.examCards)) setNt({ ...DEFAULT_NONTECH, ...n });
       if (s && Array.isArray(s.faqs) && s.faqs.length) setSchool(s);
+      if (i && Array.isArray(i.updates)) setIit({ ...DEFAULT_IIT, ...i });
     }).catch(() => { /* keep defaults */ }).finally(() => setLoading(false));
   }, []);
 
@@ -115,6 +144,7 @@ export default function PageContent() {
     setSaving(true); setError(''); setSaved('');
     try {
       if (tab === 'nontech') await setSingle('pageContent', 'nontech', nt);
+      else if (tab === 'iit') await setSingle('pageContent', 'iit', iit);
       else await setSingle('pageContent', 'school', school);
       setSaved('Saved. The live page updates within a minute.');
       setTimeout(() => setSaved(''), 4000);
@@ -138,7 +168,7 @@ export default function PageContent() {
           <p className="text-slate-500 text-sm font-medium">Edit the parts of the Non-Tech and School pages that change over time. Everything else is fixed in the design.</p>
         </div>
         <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 bg-game-teal text-white font-black px-5 py-2.5 rounded-xl hover:bg-[#054a4f] disabled:opacity-60">
-          {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save {tab === 'nontech' ? 'Non-Tech' : 'School'}
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save {tab === 'nontech' ? 'Non-Tech' : tab === 'iit' ? 'IIT / NEET' : 'School'}
         </button>
       </div>
 
@@ -147,7 +177,7 @@ export default function PageContent() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        {([['nontech', 'Non-Tech page', FileText], ['school', 'School page', GraduationCap]] as const).map(([val, lbl, Icon]) => (
+        {([['nontech', 'Non-Tech page', FileText], ['iit', 'IIT / NEET page', GraduationCap], ['school', 'School page', GraduationCap]] as const).map(([val, lbl, Icon]) => (
           <button key={val} onClick={() => setTab(val)}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border ${tab === val ? 'bg-game-teal text-white border-game-teal' : 'bg-white text-slate-600 border-slate-200'}`}>
             <Icon size={15} /> {lbl}
@@ -211,6 +241,32 @@ export default function PageContent() {
 
           {/* FAQs */}
           <FaqEditor faqs={nt.faqs} onChange={(f) => setNtList('faqs', f)} />
+        </div>
+      ) : tab === 'iit' ? (
+        <div className="space-y-8">
+          <section className="bg-white border border-slate-200 rounded-2xl p-5 grid sm:grid-cols-2 gap-4">
+            <Field title="“Last checked” date" value={iit.lastChecked} onChange={(v) => setIit({ ...iit, lastChecked: v })} />
+            <Field title="Deadline banner (leave empty to hide it, e.g. after the date passes)" value={iit.deadlineNote} onChange={(v) => setIit({ ...iit, deadlineNote: v })} />
+          </section>
+
+          <section>
+            <SectionHeader title="Latest updates" sub="The JEE/NEET updates table. Keep dates current."
+              onAdd={() => setIit({ ...iit, updates: [...iit.updates, { exam: '', update: '', status: '', tone: 'reported' }] })} />
+            <div className="space-y-3">
+              {iit.updates.map((u, i) => (
+                <CardShell key={i} index={i} onRemove={() => setIit({ ...iit, updates: iit.updates.filter((_, j) => j !== i) })}>
+                  <Field title="Exam" value={u.exam} onChange={(v) => setIit({ ...iit, updates: iit.updates.map((x, j) => j === i ? { ...x, exam: v } : x) })} />
+                  <div className="mt-3"><Field title="Update" textarea value={u.update} onChange={(v) => setIit({ ...iit, updates: iit.updates.map((x, j) => j === i ? { ...x, update: v } : x) })} /></div>
+                  <div className="grid sm:grid-cols-2 gap-3 mt-3">
+                    <Field title="Status label" value={u.status} onChange={(v) => setIit({ ...iit, updates: iit.updates.map((x, j) => j === i ? { ...x, status: v } : x) })} />
+                    <Select title="Colour" value={u.tone} options={IIT_TONES} onChange={(v) => setIit({ ...iit, updates: iit.updates.map((x, j) => j === i ? { ...x, tone: v } : x) })} />
+                  </div>
+                </CardShell>
+              ))}
+            </div>
+          </section>
+
+          <FaqEditor faqs={iit.faqs} onChange={(f) => setIit({ ...iit, faqs: f })} />
         </div>
       ) : (
         <div className="space-y-8">

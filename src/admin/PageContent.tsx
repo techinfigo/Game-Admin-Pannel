@@ -6,12 +6,13 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, Save, Plus, Trash2, FileText, GraduationCap, CheckCircle2 } from 'lucide-react';
 import { getSingle, setSingle } from '../services/firestoreService';
+import ImageUploadField from '../components/ImageUploadField';
 
 // Field shapes must match the website (components/NonTechHubPage + NextChapterPage).
-interface UpdateRow { exam: string; stage: string; update: string; status: string; tone: string; }
+interface HeroSlide { imageUrl: string; link: string; title: string; }
 interface ExamCard { route: string; eligibility: string; status: string; tone: string; title: string; desc: string; meta: string; href: string; }
 interface Faq { q: string; a: string; }
-interface NonTechDoc { lastChecked: string; updates: UpdateRow[]; examCards: ExamCard[]; faqs: Faq[]; }
+interface NonTechDoc { hero: HeroSlide[]; examCards: ExamCard[]; faqs: Faq[]; }
 interface SchoolDoc { faqs: Faq[]; }
 interface IitUpdate { exam: string; update: string; status: string; tone: string; }
 interface IitDoc { lastChecked: string; deadlineNote: string; updates: IitUpdate[]; faqs: Faq[]; }
@@ -23,15 +24,7 @@ const IIT_TONES = ['announced', 'reported', 'awaited', 'notconfirmed'];
 // Current live defaults — the editor pre-fills with these so the client edits
 // the real content rather than a blank form. Keep in sync with the website.
 const DEFAULT_NONTECH: NonTechDoc = {
-  lastChecked: '23 Nov 2026',
-  updates: [
-    { exam: 'RRB NTPC', stage: 'Graduate + UG', update: 'Graduate (CEN 06/2026) applications ran 8 Oct–8 Nov; UG (CEN 07/2026) closed 13 Nov. Modification windows run to 18 Nov and 25 Nov.', status: 'Open: edits', tone: 'open' },
-    { exam: 'SSC CHSL', stage: 'Tier I', update: 'Proposed exam window 30 Nov–31 Dec 2026, as per SSC’s schedule reported on 2 Oct. Dates can change.', status: 'Upcoming', tone: 'upcoming' },
-    { exam: 'RRB JE', stage: 'CBT-1', update: 'Held 27–28 Oct and 2 Nov. Answer key out 11 Nov. Result expected in December. CBT-2 date not announced.', status: 'Waiting', tone: 'waiting' },
-    { exam: 'SSC JE', stage: 'Paper-I', update: 'Paper-I started 2 Nov. Answer key reported 19 Nov. Paper-II is tentatively December.', status: 'Waiting', tone: 'waiting' },
-    { exam: 'SSC CGL', stage: 'Tier I → II', update: 'Tier I ran 30 Sep–30 Oct. Result awaited. Tier II is tentatively December.', status: 'Waiting', tone: 'waiting' },
-    { exam: 'UPSC ESE', stage: 'Prelims', update: 'Prelims on 31 Jan 2027. Admit card to be issued on upsc.gov.in closer to the date.', status: '31 Jan 2027', tone: 'upcoming' },
-  ],
+  hero: [],
   examCards: [
     { route: 'recruitment', eligibility: 'Graduate', status: 'Tier I done', tone: 'waiting', title: 'SSC CGL', desc: 'Non-tech: entire exam. Reasoning, GA, Quant, English. Any graduate, any branch.', meta: '12,256 posts. Tier I held 30 Sep–30 Oct 2026. Tier II tentatively Dec.', href: 'https://courses.gameacademy.in' },
     { route: 'recruitment', eligibility: 'Graduate · UG', status: 'Applications closed', tone: 'closed', title: 'RRB NTPC', desc: 'Non-tech: entire exam. Graduate (CEN 06/2026) and 12th pass (CEN 07/2026) posts.', meta: '3,548 graduate + 1,688 UG posts. Graduate CBT-1 expected Dec.', href: 'https://courses.gameacademy.in' },
@@ -187,32 +180,29 @@ export default function PageContent() {
 
       {tab === 'nontech' ? (
         <div className="space-y-8">
-          {/* Last checked */}
-          <section className="bg-white border border-slate-200 rounded-2xl p-5">
-            <div className="max-w-xs">
-              <Field title="“Last checked” date (shown under the updates table)" value={nt.lastChecked} onChange={(v) => setNtList('lastChecked', v)} />
-            </div>
-          </section>
-
-          {/* Latest updates */}
+          {/* Hero slider */}
           <section>
-            <SectionHeader title="Latest updates" sub="The table that shows what changed recently. Keep it current."
-              onAdd={() => setNtList('updates', [...nt.updates, { exam: '', stage: '', update: '', status: '', tone: 'waiting' }])} />
+            <SectionHeader title="Hero slider images" sub="The image slider at the top of the page. Add banners and the link each one opens when clicked."
+              onAdd={() => setNtList('hero', [...nt.hero, { imageUrl: '', link: '', title: '' }])} />
             <div className="space-y-3">
-              {nt.updates.map((u, i) => (
-                <CardShell key={i} index={i} onRemove={() => setNtList('updates', nt.updates.filter((_, j) => j !== i))}>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <Field title="Exam" value={u.exam} onChange={(v) => setNtList('updates', nt.updates.map((x, j) => j === i ? { ...x, exam: v } : x))} />
-                    <Field title="Stage" value={u.stage} onChange={(v) => setNtList('updates', nt.updates.map((x, j) => j === i ? { ...x, stage: v } : x))} />
-                  </div>
-                  <div className="mt-3"><Field title="Update" textarea value={u.update} onChange={(v) => setNtList('updates', nt.updates.map((x, j) => j === i ? { ...x, update: v } : x))} /></div>
+              {nt.hero.map((s, i) => (
+                <CardShell key={i} index={i} onRemove={() => setNtList('hero', nt.hero.filter((_, j) => j !== i))}>
+                  <ImageUploadField
+                    label="Banner image"
+                    value={s.imageUrl}
+                    onChange={(url) => setNtList('hero', nt.hero.map((x, j) => j === i ? { ...x, imageUrl: url } : x))}
+                    folder="nontech"
+                    hint="Wide banner, around 1200 × 820 px"
+                    previewClassName="w-28 h-20"
+                  />
                   <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                    <Field title="Status label" value={u.status} onChange={(v) => setNtList('updates', nt.updates.map((x, j) => j === i ? { ...x, status: v } : x))} />
-                    <Select title="Colour" value={u.tone} options={TONES} onChange={(v) => setNtList('updates', nt.updates.map((x, j) => j === i ? { ...x, tone: v } : x))} />
+                    <Field title="Link when clicked (/jobs, #exams, or a full https:// URL)" value={s.link} onChange={(v) => setNtList('hero', nt.hero.map((x, j) => j === i ? { ...x, link: v } : x))} />
+                    <Field title="Short title (for accessibility)" value={s.title} onChange={(v) => setNtList('hero', nt.hero.map((x, j) => j === i ? { ...x, title: v } : x))} />
                   </div>
                 </CardShell>
               ))}
             </div>
+            {nt.hero.length === 0 && <p className="text-xs text-slate-400 mt-2">No banners added yet — the page shows placeholder images until you add some.</p>}
           </section>
 
           {/* Exam cards */}

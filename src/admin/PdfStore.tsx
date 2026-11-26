@@ -17,7 +17,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { PdfItem } from '../types';
+import { PdfItem, PdfReview } from '../types';
 import { getAll, addItem, updateItem, deleteItem } from '../services/firestoreService';
 import { uploadPdf } from '../services/uploadService';
 import ImageUploadField from '../components/ImageUploadField';
@@ -40,7 +40,11 @@ const emptyForm: Partial<PdfItem> = {
   price: 0,
   pageCount: 0,
   previewPages: 0,
-  published: true
+  published: true,
+  images: [],
+  purchaseIncludes: [],
+  resourceDetails: [],
+  reviews: []
 };
 
 export default function PdfStore() {
@@ -116,6 +120,13 @@ export default function PdfStore() {
     }
   };
 
+  const addReview = () =>
+    setFormData((prev) => ({ ...prev, reviews: [...(prev.reviews || []), { name: '', text: '', rating: 5, verified: false }] }));
+  const updateReview = (i: number, patch: Partial<PdfReview>) =>
+    setFormData((prev) => ({ ...prev, reviews: (prev.reviews || []).map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
+  const removeReview = (i: number) =>
+    setFormData((prev) => ({ ...prev, reviews: (prev.reviews || []).filter((_, j) => j !== i) }));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -128,7 +139,18 @@ export default function PdfStore() {
 
     const payload: Partial<PdfItem> = {
       ...formData,
-      price: isFree ? 0 : formData.price
+      price: isFree ? 0 : formData.price,
+      images: (formData.images || []).filter(Boolean),
+      purchaseIncludes: (formData.purchaseIncludes || []).map((s) => (s || '').trim()).filter(Boolean),
+      resourceDetails: (formData.resourceDetails || []).map((s) => (s || '').trim()).filter(Boolean),
+      reviews: (formData.reviews || [])
+        .map((r) => ({
+          name: (r.name || '').trim(),
+          text: (r.text || '').trim(),
+          rating: Number(r.rating) || 0,
+          verified: !!r.verified
+        }))
+        .filter((r) => r.text || r.name)
     };
 
     try {
@@ -389,11 +411,41 @@ export default function PdfStore() {
 
                   <div className="md:col-span-2">
                     <ImageUploadField
-                      label="Thumbnail Image"
+                      label="Thumbnail Image (cover)"
                       value={formData.thumbnailUrl}
                       onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
                       folder="pdfs"
                       hint="Recommended: 600 × 800 px (cover)"
+                    />
+                  </div>
+
+                  {/* Additional gallery images */}
+                  <div className="md:col-span-2">
+                    <label className="label-text">Additional Images (gallery)</label>
+                    <p className="text-xs text-slate-400 mb-2">Shown as a gallery on the resource page, alongside the cover. Add as many as you like.</p>
+                    {(formData.images || []).length > 0 && (
+                      <div className="space-y-2 mb-3">
+                        {(formData.images || []).map((url, i) => (
+                          <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                            <img src={url} alt="" referrerPolicy="no-referrer" className="w-10 h-12 object-cover rounded-lg border border-slate-200 shrink-0" />
+                            <span className="flex-1 text-xs text-slate-500 truncate">{url}</span>
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, images: (prev.images || []).filter((_, j) => j !== i) }))}
+                              className="p-1.5 text-red-500 hover:bg-white rounded-lg transition-colors shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <ImageUploadField
+                      label="Add an image"
+                      value=""
+                      onChange={(url) => setFormData(prev => ({ ...prev, images: [...(prev.images || []), url] }))}
+                      folder="pdfs"
+                      hint="Upload or paste a URL — it is added to the gallery."
                     />
                   </div>
 
@@ -404,6 +456,76 @@ export default function PdfStore() {
                   <div>
                     <label className="label-text">Preview Pages</label>
                     <input type="number" value={formData.previewPages} onChange={(e) => setFormData({ ...formData, previewPages: Number(e.target.value) })} className="input-field" placeholder="0" min="0" required />
+                  </div>
+
+                  {/* Editable content lists shown on the resource page */}
+                  <div className="md:col-span-2">
+                    <label className="label-text">Your purchase includes</label>
+                    <p className="text-xs text-slate-400 mb-2">One point per line. Leave blank to use the standard list.</p>
+                    <textarea
+                      value={(formData.purchaseIncludes || []).join('\n')}
+                      onChange={(e) => setFormData({ ...formData, purchaseIncludes: e.target.value.split('\n') })}
+                      onBlur={(e) => setFormData({ ...formData, purchaseIncludes: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })}
+                      className="input-field min-h-[110px]"
+                      placeholder={'Full version of this resource\nAccess in My Downloads\nDownload after confirmed payment\nNo course app required'}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="label-text">Resource details</label>
+                    <p className="text-xs text-slate-400 mb-2">One line per detail (e.g. “Format: PDF (digital download)”, “SSC JE”). Leave blank to auto-build from the fields above.</p>
+                    <textarea
+                      value={(formData.resourceDetails || []).join('\n')}
+                      onChange={(e) => setFormData({ ...formData, resourceDetails: e.target.value.split('\n') })}
+                      onBlur={(e) => setFormData({ ...formData, resourceDetails: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })}
+                      className="input-field min-h-[90px]"
+                      placeholder={'Format: PDF (digital download)\nSSC JE'}
+                    />
+                  </div>
+
+                  {/* Text reviews (shown on the resource page only when added) */}
+                  <div className="md:col-span-2">
+                    <label className="label-text">Student reviews (text)</label>
+                    <p className="text-xs text-slate-400 mb-2">Real, resource-specific feedback only. Leave empty to hide the reviews section on the page.</p>
+                    <div className="space-y-3">
+                      {(formData.reviews || []).map((rv, i) => (
+                        <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              type="text"
+                              value={rv.name}
+                              onChange={(e) => updateReview(i, { name: e.target.value })}
+                              className="input-field flex-1 min-w-[160px] !py-2"
+                              placeholder="Student name"
+                            />
+                            <select
+                              value={rv.rating ?? 0}
+                              onChange={(e) => updateReview(i, { rating: Number(e.target.value) })}
+                              className="input-field !py-2 w-28"
+                            >
+                              <option value={0}>No stars</option>
+                              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n} ★</option>)}
+                            </select>
+                            <label className="flex items-center gap-1.5 text-xs font-bold text-slate-600 cursor-pointer whitespace-nowrap">
+                              <input type="checkbox" checked={!!rv.verified} onChange={(e) => updateReview(i, { verified: e.target.checked })} className="w-4 h-4 rounded text-game-teal border-slate-300 focus:ring-game-teal" />
+                              Verified buyer
+                            </label>
+                            <button type="button" onClick={() => removeReview(i)} className="p-1.5 text-red-500 hover:bg-white rounded-lg transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <textarea
+                            value={rv.text}
+                            onChange={(e) => updateReview(i, { text: e.target.value })}
+                            className="input-field min-h-[70px]"
+                            placeholder="Review text…"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <button type="button" onClick={addReview} className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-game-teal border border-game-teal/30 rounded-xl px-3 py-2 hover:bg-game-teal/5 transition-colors">
+                      <Plus className="w-4 h-4" /> Add review
+                    </button>
                   </div>
 
                   <div className="md:col-span-2 pt-4 flex items-center gap-6">

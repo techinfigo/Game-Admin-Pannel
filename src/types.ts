@@ -259,6 +259,17 @@ export interface PdfItem {
   previewPages: number;
   published: boolean;
   createdAt: string;
+  images?: string[];
+  purchaseIncludes?: string[];
+  resourceDetails?: string[];
+  reviews?: PdfReview[];
+}
+
+export interface PdfReview {
+  name: string;
+  text: string;
+  rating?: number;
+  verified?: boolean;
 }
 
 export interface Student {

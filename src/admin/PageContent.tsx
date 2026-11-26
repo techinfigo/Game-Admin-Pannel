@@ -13,7 +13,7 @@ interface HeroSlide { imageUrl: string; link: string; title: string; }
 interface ExamCard { route: string; eligibility: string; status: string; tone: string; title: string; desc: string; meta: string; href: string; }
 interface Faq { q: string; a: string; }
 interface NonTechDoc { hero: HeroSlide[]; examCards: ExamCard[]; faqs: Faq[]; }
-interface SchoolDoc { faqs: Faq[]; }
+interface SchoolDoc { faqs: Faq[]; guideSchool?: string; guideJee?: string; guideNeet?: string; physicsPlaylist?: string; }
 interface IitUpdate { exam: string; update: string; status: string; tone: string; }
 interface IitDoc { lastChecked: string; deadlineNote: string; updates: IitUpdate[]; faqs: Faq[]; }
 
@@ -45,10 +45,18 @@ const DEFAULT_NONTECH: NonTechDoc = {
 };
 
 const DEFAULT_SCHOOL: SchoolDoc = {
+  guideSchool: '',
+  guideJee: '',
+  guideNeet: '',
+  physicsPlaylist: '',
   faqs: [
-    { q: 'Can I start without choosing JEE or NEET?', a: 'Yes. You can begin with your class and school subjects, strengthen your fundamentals, and decide on an entrance path later.' },
-    { q: 'Can I study just one subject?', a: 'Yes. Pick the subject you want to understand better — you do not have to commit to a full programme to start exploring.' },
-    { q: 'Where do I check official exam rules?', a: 'For JEE and NEET, always confirm eligibility, syllabus and dates on the official examination authority’s website (NTA). This page helps you explore, not apply.' },
+    { q: 'Does GAME currently offer courses for Classes 9-12?', a: 'No. GAME does not currently offer Classes 9-12 courses. This page brings together Gaurav Babu Sir’s available Physics lessons on YouTube, introductory study guides and a form to share your learning interests.' },
+    { q: 'Can I watch Gaurav Sir’s Physics lessons without joining a course?', a: 'Yes. Use the Physics playlist link on this page to watch the lessons available on YouTube. You do not need to enrol in a GAME school course.' },
+    { q: 'Do I need to choose JEE or NEET now?', a: 'No. You can begin with your current school subjects and use the guides to understand your options. You can also select Not sure yet in the interest form.' },
+    { q: 'What happens when I submit my learning interests?', a: 'Your response helps GAME understand your class, subject interests and learning needs. Submission is not admission, a course booking or a guarantee of personalised counselling.' },
+    { q: 'Will GAME launch Classes 9-12 courses?', a: 'GAME intends to develop its school-learning offering, but no launch date or course availability is confirmed on this page. Any future announcement will explain what is available and how to access it.' },
+    { q: 'Are the guides complete preparation material?', a: 'No. They are short orientation guides. Use your current school or board syllabus, prescribed learning material and the relevant official examination syllabus for detailed preparation.' },
+    { q: 'Where should I confirm JEE or NEET eligibility and dates?', a: 'Use the official JEE Main, JEE Advanced and NEET UG websites. Their current notices and information bulletins take precedence over guidance PDFs or social-media posts.' },
   ],
 };
 
@@ -128,7 +136,7 @@ export default function PageContent() {
       getSingle<IitDoc>('pageContent', 'iit'),
     ]).then(([n, s, i]) => {
       if (n && Array.isArray(n.examCards)) setNt({ ...DEFAULT_NONTECH, ...n });
-      if (s && Array.isArray(s.faqs) && s.faqs.length) setSchool(s);
+      if (s) setSchool({ ...DEFAULT_SCHOOL, ...s, faqs: (Array.isArray(s.faqs) && s.faqs.length) ? s.faqs : DEFAULT_SCHOOL.faqs });
       if (i && Array.isArray(i.updates)) setIit({ ...DEFAULT_IIT, ...i });
     }).catch(() => { /* keep defaults */ }).finally(() => setLoading(false));
   }, []);
@@ -260,7 +268,18 @@ export default function PageContent() {
         </div>
       ) : (
         <div className="space-y-8">
-          <FaqEditor faqs={school.faqs} onChange={(f) => setSchool({ faqs: f })} />
+          <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+            <div>
+              <h2 className="text-lg font-black text-slate-900">Guide links &amp; Physics playlist</h2>
+              <p className="text-xs text-slate-400 font-medium">Paste the link each button opens. Leave blank to use the built-in defaults.</p>
+            </div>
+            <Field title="Starter / School &amp; Boards guide (hero button + School card)" value={school.guideSchool || ''} onChange={(v) => setSchool({ ...school, guideSchool: v })} />
+            <Field title="JEE guide" value={school.guideJee || ''} onChange={(v) => setSchool({ ...school, guideJee: v })} />
+            <Field title="NEET guide" value={school.guideNeet || ''} onChange={(v) => setSchool({ ...school, guideNeet: v })} />
+            <Field title="Physics playlist (YouTube) — hero button + Physics card" value={school.physicsPlaylist || ''} onChange={(v) => setSchool({ ...school, physicsPlaylist: v })} />
+          </section>
+
+          <FaqEditor faqs={school.faqs} onChange={(f) => setSchool({ ...school, faqs: f })} />
         </div>
       )}
     </div>

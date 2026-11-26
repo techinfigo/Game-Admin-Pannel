@@ -15,7 +15,7 @@ interface Faq { q: string; a: string; }
 interface NonTechDoc { hero: HeroSlide[]; examCards: ExamCard[]; faqs: Faq[]; }
 interface SchoolDoc { faqs: Faq[]; guideSchool?: string; guideJee?: string; guideNeet?: string; physicsPlaylist?: string; heroVideos?: string[]; }
 interface IitUpdate { exam: string; update: string; status: string; tone: string; }
-interface IitDoc { lastChecked: string; deadlineNote: string; updates: IitUpdate[]; faqs: Faq[]; }
+interface IitDoc { lastChecked: string; deadlineNote: string; updates: IitUpdate[]; faqs: Faq[]; hero?: HeroSlide[]; }
 
 const TONES = ['open', 'waiting', 'upcoming', 'closed'];
 const ROUTES = ['recruitment', 'engineering'];
@@ -243,6 +243,31 @@ export default function PageContent() {
         </div>
       ) : tab === 'iit' ? (
         <div className="space-y-8">
+          {/* Hero slider */}
+          <section>
+            <SectionHeader title="Hero slider images" sub="The image slider at the top of the page. Add banners and the link each one opens when clicked."
+              onAdd={() => setIit({ ...iit, hero: [...(iit.hero || []), { imageUrl: '', link: '', title: '' }] })} />
+            <div className="space-y-3">
+              {(iit.hero || []).map((s, i) => (
+                <CardShell key={i} index={i} onRemove={() => setIit({ ...iit, hero: (iit.hero || []).filter((_, j) => j !== i) })}>
+                  <ImageUploadField
+                    label="Banner image"
+                    value={s.imageUrl}
+                    onChange={(url) => setIit({ ...iit, hero: (iit.hero || []).map((x, j) => j === i ? { ...x, imageUrl: url } : x) })}
+                    folder="iit"
+                    hint="Wide banner, around 1200 × 820 px"
+                    previewClassName="w-28 h-20"
+                  />
+                  <div className="grid sm:grid-cols-2 gap-3 mt-3">
+                    <Field title="Link when clicked (#updates, #compare, or a full https:// URL)" value={s.link} onChange={(v) => setIit({ ...iit, hero: (iit.hero || []).map((x, j) => j === i ? { ...x, link: v } : x) })} />
+                    <Field title="Short title (for accessibility)" value={s.title} onChange={(v) => setIit({ ...iit, hero: (iit.hero || []).map((x, j) => j === i ? { ...x, title: v } : x) })} />
+                  </div>
+                </CardShell>
+              ))}
+            </div>
+            {(iit.hero || []).length === 0 && <p className="text-xs text-slate-400 mt-2">No banners added yet — the page shows placeholder images until you add some.</p>}
+          </section>
+
           <section className="bg-white border border-slate-200 rounded-2xl p-5 grid sm:grid-cols-2 gap-4">
             <Field title="“Last checked” date" value={iit.lastChecked} onChange={(v) => setIit({ ...iit, lastChecked: v })} />
             <Field title="Deadline banner (leave empty to hide it, e.g. after the date passes)" value={iit.deadlineNote} onChange={(v) => setIit({ ...iit, deadlineNote: v })} />

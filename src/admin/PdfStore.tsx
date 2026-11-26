@@ -40,7 +40,10 @@ const emptyForm: Partial<PdfItem> = {
   price: 0,
   pageCount: 0,
   previewPages: 0,
-  published: true
+  published: true,
+  images: [],
+  purchaseIncludes: [],
+  resourceDetails: []
 };
 
 export default function PdfStore() {
@@ -128,7 +131,10 @@ export default function PdfStore() {
 
     const payload: Partial<PdfItem> = {
       ...formData,
-      price: isFree ? 0 : formData.price
+      price: isFree ? 0 : formData.price,
+      images: (formData.images || []).filter(Boolean),
+      purchaseIncludes: (formData.purchaseIncludes || []).map((s) => (s || '').trim()).filter(Boolean),
+      resourceDetails: (formData.resourceDetails || []).map((s) => (s || '').trim()).filter(Boolean)
     };
 
     try {
@@ -389,11 +395,41 @@ export default function PdfStore() {
 
                   <div className="md:col-span-2">
                     <ImageUploadField
-                      label="Thumbnail Image"
+                      label="Thumbnail Image (cover)"
                       value={formData.thumbnailUrl}
                       onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
                       folder="pdfs"
                       hint="Recommended: 600 × 800 px (cover)"
+                    />
+                  </div>
+
+                  {/* Additional gallery images */}
+                  <div className="md:col-span-2">
+                    <label className="label-text">Additional Images (gallery)</label>
+                    <p className="text-xs text-slate-400 mb-2">Shown as a gallery on the resource page, alongside the cover. Add as many as you like.</p>
+                    {(formData.images || []).length > 0 && (
+                      <div className="space-y-2 mb-3">
+                        {(formData.images || []).map((url, i) => (
+                          <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                            <img src={url} alt="" referrerPolicy="no-referrer" className="w-10 h-12 object-cover rounded-lg border border-slate-200 shrink-0" />
+                            <span className="flex-1 text-xs text-slate-500 truncate">{url}</span>
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, images: (prev.images || []).filter((_, j) => j !== i) }))}
+                              className="p-1.5 text-red-500 hover:bg-white rounded-lg transition-colors shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <ImageUploadField
+                      label="Add an image"
+                      value=""
+                      onChange={(url) => setFormData(prev => ({ ...prev, images: [...(prev.images || []), url] }))}
+                      folder="pdfs"
+                      hint="Upload or paste a URL — it is added to the gallery."
                     />
                   </div>
 
@@ -404,6 +440,31 @@ export default function PdfStore() {
                   <div>
                     <label className="label-text">Preview Pages</label>
                     <input type="number" value={formData.previewPages} onChange={(e) => setFormData({ ...formData, previewPages: Number(e.target.value) })} className="input-field" placeholder="0" min="0" required />
+                  </div>
+
+                  {/* Editable content lists shown on the resource page */}
+                  <div className="md:col-span-2">
+                    <label className="label-text">Your purchase includes</label>
+                    <p className="text-xs text-slate-400 mb-2">One point per line. Leave blank to use the standard list.</p>
+                    <textarea
+                      value={(formData.purchaseIncludes || []).join('\n')}
+                      onChange={(e) => setFormData({ ...formData, purchaseIncludes: e.target.value.split('\n') })}
+                      onBlur={(e) => setFormData({ ...formData, purchaseIncludes: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })}
+                      className="input-field min-h-[110px]"
+                      placeholder={'Full version of this resource\nAccess in My Downloads\nDownload after confirmed payment\nNo course app required'}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="label-text">Resource details</label>
+                    <p className="text-xs text-slate-400 mb-2">One line per detail (e.g. “Format: PDF (digital download)”, “SSC JE”). Leave blank to auto-build from the fields above.</p>
+                    <textarea
+                      value={(formData.resourceDetails || []).join('\n')}
+                      onChange={(e) => setFormData({ ...formData, resourceDetails: e.target.value.split('\n') })}
+                      onBlur={(e) => setFormData({ ...formData, resourceDetails: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })}
+                      className="input-field min-h-[90px]"
+                      placeholder={'Format: PDF (digital download)\nSSC JE'}
+                    />
                   </div>
 
                   <div className="md:col-span-2 pt-4 flex items-center gap-6">

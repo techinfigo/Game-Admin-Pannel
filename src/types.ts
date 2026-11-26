@@ -259,6 +259,9 @@ export interface PdfItem {
   previewPages: number;
   published: boolean;
   createdAt: string;
+  images?: string[];
+  purchaseIncludes?: string[];
+  resourceDetails?: string[];
 }
 
 export interface Student {

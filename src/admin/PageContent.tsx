@@ -13,7 +13,7 @@ interface HeroSlide { imageUrl: string; link: string; title: string; }
 interface ExamCard { route: string; eligibility: string; status: string; tone: string; title: string; desc: string; meta: string; href: string; }
 interface Faq { q: string; a: string; }
 interface NonTechDoc { hero: HeroSlide[]; examCards: ExamCard[]; faqs: Faq[]; }
-interface SchoolDoc { faqs: Faq[]; guideSchool?: string; guideJee?: string; guideNeet?: string; physicsPlaylist?: string; }
+interface SchoolDoc { faqs: Faq[]; guideSchool?: string; guideJee?: string; guideNeet?: string; physicsPlaylist?: string; heroVideos?: string[]; }
 interface IitUpdate { exam: string; update: string; status: string; tone: string; }
 interface IitDoc { lastChecked: string; deadlineNote: string; updates: IitUpdate[]; faqs: Faq[]; }
 
@@ -49,6 +49,7 @@ const DEFAULT_SCHOOL: SchoolDoc = {
   guideJee: '',
   guideNeet: '',
   physicsPlaylist: '',
+  heroVideos: [],
   faqs: [
     { q: 'Does GAME currently offer courses for Classes 9-12?', a: 'No. GAME does not currently offer Classes 9-12 courses. This page brings together Gaurav Babu Sir’s available Physics lessons on YouTube, introductory study guides and a form to share your learning interests.' },
     { q: 'Can I watch Gaurav Sir’s Physics lessons without joining a course?', a: 'Yes. Use the Physics playlist link on this page to watch the lessons available on YouTube. You do not need to enrol in a GAME school course.' },
@@ -277,6 +278,18 @@ export default function PageContent() {
             <Field title="JEE guide" value={school.guideJee || ''} onChange={(v) => setSchool({ ...school, guideJee: v })} />
             <Field title="NEET guide" value={school.guideNeet || ''} onChange={(v) => setSchool({ ...school, guideNeet: v })} />
             <Field title="Physics playlist (YouTube) — hero button + Physics card" value={school.physicsPlaylist || ''} onChange={(v) => setSchool({ ...school, physicsPlaylist: v })} />
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">Hero lesson videos — one YouTube link per line</label>
+              <p className="text-xs text-slate-400 mb-1.5">These play as the cards at the top of the page. Leave blank to use the default channel videos.</p>
+              <textarea
+                value={(school.heroVideos || []).join('\n')}
+                onChange={(e) => setSchool({ ...school, heroVideos: e.target.value.split('\n') })}
+                onBlur={(e) => setSchool({ ...school, heroVideos: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean) })}
+                rows={3}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-game-teal outline-none"
+                placeholder={'https://www.youtube.com/watch?v=xxxxxxxxxxx\nhttps://youtu.be/yyyyyyyyyyy'}
+              />
+            </div>
           </section>
 
           <FaqEditor faqs={school.faqs} onChange={(f) => setSchool({ ...school, faqs: f })} />

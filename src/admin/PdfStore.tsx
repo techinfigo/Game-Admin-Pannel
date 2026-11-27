@@ -415,7 +415,7 @@ export default function PdfStore() {
                       value={formData.thumbnailUrl}
                       onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
                       folder="pdfs"
-                      hint="Recommended: 600 × 800 px (cover)"
+                      hint="Recommended: 1200 × 900 px — 4:3 landscape (keep the title centered)"
                     />
                   </div>
 

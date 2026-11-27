@@ -294,11 +294,13 @@ export default function ExamPages() {
         await setSingle(COLLECTION, examId, data);
       }
       setMessage({ type: 'ok', text: `Saved! Changes appear on the live ${exam.label} page within ~5 minutes.` });
-    } catch {
-      setMessage({ type: 'err', text: 'Failed to save. Please try again.' });
+    } catch (err: any) {
+      console.error('ExamPages save failed:', err);
+      const code = err?.code || err?.message || 'unknown error';
+      setMessage({ type: 'err', text: `Could not save (${code}). Please screenshot this and send it to the developer.` });
     } finally {
       setIsSaving(false);
-      setTimeout(() => setMessage(null), 6000);
+      setTimeout(() => setMessage(null), 12000);
     }
   };
 

@@ -45,11 +45,12 @@ interface ExamContent {
 // getExamContent('<id>')). `hasExtras` marks the GATE page, which is the only
 // page whose Advantages / Benefits / Dates / Toppers / FAQs are also wired to
 // this content; every page's Hero Banner Slides are editable.
-// `store` says where the content lives: 'exam' = examPageContent/<id> (the six
-// built exam pages), 'page' = pageContent/<id> (the Non-Tech / IIT / School hub
-// pages, which the website reads via /api/page-content). `heroKind` = 'video'
+// Every page (built exam pages AND the Non-Tech / IIT / School hub pages) stores
+// its editable content in the SAME `examPageContent/<id>` collection, because
+// that collection is the one the admin is allowed to write to. The website reads
+// the hub pages' hero from there via /api/page-content. `heroKind` = 'video'
 // marks a page whose hero is a YouTube video/playlist, not a banner image.
-interface ExamDef { id: string; label: string; hasExtras?: boolean; store?: 'exam' | 'page'; heroKind?: 'image' | 'video'; }
+interface ExamDef { id: string; label: string; hasExtras?: boolean; heroKind?: 'image' | 'video'; }
 const EXAMS: ExamDef[] = [
   { id: 'gate', label: 'GATE', hasExtras: true },
   { id: 'psu', label: 'PSU / Govt R&D' },
@@ -57,9 +58,9 @@ const EXAMS: ExamDef[] = [
   { id: 'ssc', label: 'SSC-JE' },
   { id: 'ese', label: 'ESE' },
   { id: 'state', label: 'State AE/JE' },
-  { id: 'nontech', label: 'Non-Tech', store: 'page' },
-  { id: 'iit', label: 'IIT-JEE / NEET', store: 'page' },
-  { id: 'school', label: '9th-12th', store: 'page', heroKind: 'video' },
+  { id: 'nontech', label: 'Non-Tech' },
+  { id: 'iit', label: 'IIT-JEE / NEET' },
+  { id: 'school', label: '9th-12th', heroKind: 'video' },
 ];
 
 // Default hero video/playlist for the School page (mirrors the website default).
@@ -248,17 +249,12 @@ export default function ExamPages() {
       setMessage(null);
       try {
         const def = EXAMS.find(e => e.id === examId);
-        if ((def?.store || 'exam') === 'page') {
-          // Hub pages store their content in pageContent/<id>.
-          const loaded = await getSingle<any>('pageContent', examId);
+        if (def?.heroKind === 'video') {
+          // School: a single hero video/playlist, stored in examPageContent/<id>.
+          const loaded = await getSingle<any>(COLLECTION, examId);
           if (!cancelled) {
-            if (def?.heroKind === 'video') {
-              const vid = loaded?.physicsPlaylist && String(loaded.physicsPlaylist).trim();
-              setData({ hero: [], heroVideo: vid || SCHOOL_HERO_VIDEO_DEFAULT, ...clone(emptyExtras) });
-            } else {
-              const hero = Array.isArray(loaded?.hero) && loaded.hero.length ? loaded.hero : (HERO_SEEDS[examId] || []);
-              setData({ hero: clone(hero), ...clone(emptyExtras) });
-            }
+            const vid = loaded?.heroVideo && String(loaded.heroVideo).trim();
+            setData({ hero: [], heroVideo: vid || SCHOOL_HERO_VIDEO_DEFAULT, ...clone(emptyExtras) });
           }
         } else {
           const loaded = await getSingle<Partial<ExamContent>>(COLLECTION, examId);
@@ -280,25 +276,20 @@ export default function ExamPages() {
     setIsSaving(true);
     setMessage(null);
     try {
-      const store = exam.store || 'exam';
-      if (store === 'page') {
-        // Merge only the hero (or hero video) into pageContent/<id> so the
-        // page's other admin-editable content (cards, FAQs, guides…) is kept.
-        if (exam.heroKind === 'video') {
-          await setSingle('pageContent', examId, { physicsPlaylist: (data.heroVideo || '').trim() });
-        } else {
-          const hero = data.hero.map(h => ({ imageUrl: h.imageUrl || '', link: h.link || '', title: h.title || '' }));
-          await setSingle('pageContent', examId, { hero });
-        }
+      if (exam.heroKind === 'video') {
+        // School: save just the hero video/playlist (merge, keep anything else).
+        await setSingle(COLLECTION, examId, { heroVideo: (data.heroVideo || '').trim() });
       } else {
         await setSingle(COLLECTION, examId, data);
       }
       setMessage({ type: 'ok', text: `Saved! Changes appear on the live ${exam.label} page within ~5 minutes.` });
-    } catch {
-      setMessage({ type: 'err', text: 'Failed to save. Please try again.' });
+    } catch (err: any) {
+      console.error('ExamPages save failed:', err);
+      const code = err?.code || err?.message || 'unknown error';
+      setMessage({ type: 'err', text: `Could not save (${code}). Please screenshot this and send it to the developer.` });
     } finally {
       setIsSaving(false);
-      setTimeout(() => setMessage(null), 6000);
+      setTimeout(() => setMessage(null), 12000);
     }
   };
 

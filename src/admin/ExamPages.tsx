@@ -32,6 +32,7 @@ interface Ranker { name?: string; rank?: string; image?: string; videoId?: strin
 
 interface ExamContent {
   hero: HeroSlide[];
+  heroVideo?: string; // only for video-hero pages (e.g. 9th-12th / School)
   importantDates: DateRow[];
   faqs: Faq[];
   courseBenefits: Benefit[];
@@ -44,7 +45,11 @@ interface ExamContent {
 // getExamContent('<id>')). `hasExtras` marks the GATE page, which is the only
 // page whose Advantages / Benefits / Dates / Toppers / FAQs are also wired to
 // this content; every page's Hero Banner Slides are editable.
-interface ExamDef { id: string; label: string; hasExtras?: boolean; }
+// `store` says where the content lives: 'exam' = examPageContent/<id> (the six
+// built exam pages), 'page' = pageContent/<id> (the Non-Tech / IIT / School hub
+// pages, which the website reads via /api/page-content). `heroKind` = 'video'
+// marks a page whose hero is a YouTube video/playlist, not a banner image.
+interface ExamDef { id: string; label: string; hasExtras?: boolean; store?: 'exam' | 'page'; heroKind?: 'image' | 'video'; }
 const EXAMS: ExamDef[] = [
   { id: 'gate', label: 'GATE', hasExtras: true },
   { id: 'psu', label: 'PSU / Govt R&D' },
@@ -52,7 +57,13 @@ const EXAMS: ExamDef[] = [
   { id: 'ssc', label: 'SSC-JE' },
   { id: 'ese', label: 'ESE' },
   { id: 'state', label: 'State AE/JE' },
+  { id: 'nontech', label: 'Non-Tech', store: 'page' },
+  { id: 'iit', label: 'IIT-JEE / NEET', store: 'page' },
+  { id: 'school', label: '9th-12th', store: 'page', heroKind: 'video' },
 ];
+
+// Default hero video/playlist for the School page (mirrors the website default).
+const SCHOOL_HERO_VIDEO_DEFAULT = 'https://youtube.com/playlist?list=PL4z8h611VJ3DzujUrV1eQpSjue0vRJlAM';
 
 const emptyExtras = { importantDates: [] as DateRow[], faqs: [] as Faq[], courseBenefits: [] as Benefit[], advantages: [] as Advantage[], rankers: [] as Ranker[] };
 
@@ -142,12 +153,27 @@ const HERO_SEEDS: Record<string, HeroSlide[]> = {
     { title: 'PWD / Irrigation posts banner', imageUrl: '/state/hero-3.jpg', link: '#state-courses', buttonText: 'Explore Courses' },
     { title: 'Career close to home banner', imageUrl: '/state/hero-4.jpg', link: '#state-courses', buttonText: 'Explore Courses' },
   ],
+  // Hub pages (pageContent). These heroes are the website's image sliders.
+  nontech: [
+    { title: 'Non-tech in engineering exams', imageUrl: 'https://picsum.photos/seed/nontech-hero-1/1200/820', link: '#exams' },
+    { title: 'General studies that decides ranks', imageUrl: 'https://picsum.photos/seed/nontech-hero-2/1200/820', link: '#exams' },
+    { title: 'Beyond Boundaries GS course', imageUrl: 'https://picsum.photos/seed/nontech-hero-3/1200/820', link: '#course' },
+    { title: 'Start preparing now', imageUrl: 'https://picsum.photos/seed/nontech-hero-4/1200/820', link: '#exams' },
+  ],
+  iit: [
+    { title: 'JEE Main 2027 updates', imageUrl: 'https://picsum.photos/seed/iit-hero-1/1200/820', link: '#updates' },
+    { title: 'JEE Advanced 2027', imageUrl: 'https://picsum.photos/seed/iit-hero-2/1200/820', link: '#updates' },
+    { title: 'NEET UG 2027', imageUrl: 'https://picsum.photos/seed/iit-hero-3/1200/820', link: '#updates' },
+    { title: 'Compare the exams', imageUrl: 'https://picsum.photos/seed/iit-hero-4/1200/820', link: '#compare' },
+  ],
 };
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 
 function seedFor(examId: string): ExamContent {
   if (examId === 'gate') return clone(GATE_SEED);
+  const def = EXAMS.find(e => e.id === examId);
+  if (def?.heroKind === 'video') return { hero: [], heroVideo: SCHOOL_HERO_VIDEO_DEFAULT, ...clone(emptyExtras) };
   return { hero: clone(HERO_SEEDS[examId] || []), ...clone(emptyExtras) };
 }
 
@@ -221,8 +247,23 @@ export default function ExamPages() {
       setIsLoading(true);
       setMessage(null);
       try {
-        const loaded = await getSingle<Partial<ExamContent>>(COLLECTION, examId);
-        if (!cancelled) setData(mergeWithSeed(examId, loaded));
+        const def = EXAMS.find(e => e.id === examId);
+        if ((def?.store || 'exam') === 'page') {
+          // Hub pages store their content in pageContent/<id>.
+          const loaded = await getSingle<any>('pageContent', examId);
+          if (!cancelled) {
+            if (def?.heroKind === 'video') {
+              const vid = loaded?.physicsPlaylist && String(loaded.physicsPlaylist).trim();
+              setData({ hero: [], heroVideo: vid || SCHOOL_HERO_VIDEO_DEFAULT, ...clone(emptyExtras) });
+            } else {
+              const hero = Array.isArray(loaded?.hero) && loaded.hero.length ? loaded.hero : (HERO_SEEDS[examId] || []);
+              setData({ hero: clone(hero), ...clone(emptyExtras) });
+            }
+          }
+        } else {
+          const loaded = await getSingle<Partial<ExamContent>>(COLLECTION, examId);
+          if (!cancelled) setData(mergeWithSeed(examId, loaded));
+        }
       } catch {
         if (!cancelled) {
           setData(seedFor(examId));
@@ -239,7 +280,19 @@ export default function ExamPages() {
     setIsSaving(true);
     setMessage(null);
     try {
-      await setSingle(COLLECTION, examId, data);
+      const store = exam.store || 'exam';
+      if (store === 'page') {
+        // Merge only the hero (or hero video) into pageContent/<id> so the
+        // page's other admin-editable content (cards, FAQs, guides…) is kept.
+        if (exam.heroKind === 'video') {
+          await setSingle('pageContent', examId, { physicsPlaylist: (data.heroVideo || '').trim() });
+        } else {
+          const hero = data.hero.map(h => ({ imageUrl: h.imageUrl || '', link: h.link || '', title: h.title || '' }));
+          await setSingle('pageContent', examId, { hero });
+        }
+      } else {
+        await setSingle(COLLECTION, examId, data);
+      }
       setMessage({ type: 'ok', text: `Saved! Changes appear on the live ${exam.label} page within ~5 minutes.` });
     } catch {
       setMessage({ type: 'err', text: 'Failed to save. Please try again.' });
@@ -269,7 +322,7 @@ export default function ExamPages() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Exam Pages</h1>
-          <p className="text-slate-500 mt-1">Edit the hero banners (and, for GATE, more content) shown on each exam page. Design and layout stay the same.</p>
+          <p className="text-slate-500 mt-1">Edit the top hero of every examination page (and, for GATE, more content). Design and layout stay the same.</p>
         </div>
         <button onClick={handleSave} disabled={isSaving || isLoading} className="btn-primary disabled:opacity-50">
           {isSaving ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Saving...</> : <><Save className="w-5 h-5" /> Save Changes</>}
@@ -309,24 +362,34 @@ export default function ExamPages() {
         </div>
       ) : (
         <>
-          {/* HERO SLIDES — editable for every exam page */}
-          <SectionCard icon={MonitorPlay} title="Hero Banner Slides" subtitle="These banners are full designed images (the text and buttons are part of the picture). To change the wording or design, upload a new banner image. Set where clicking the banner should take the visitor.">
-            {data.hero.map((s, i) => (
-              <ItemShell key={i} index={i} onRemove={() => removeItem('hero', i)}>
-                <ImageUploadField label="Banner Image" value={s.imageUrl} onChange={url => updateItem('hero', i, { imageUrl: url })} folder={storageFolder} hint="The full banner graphic. Recommended: 900 × 700 px (landscape)." previewClassName="w-28 h-20" />
-                <div>
-                  <label className="label-text">Link — where clicking this banner goes</label>
-                  <input className="input-field" value={s.link || ''} onChange={e => updateItem('hero', i, { link: e.target.value })} placeholder="e.g. #courses  ·  /courses  ·  https://courses.gameacademy.in/..." />
-                  <p className="text-xs text-slate-400 mt-1">Use a <b>#section</b> to scroll on this page, a path like <b>/jobs</b> for another page on your site, or a full <b>https://</b> link to open elsewhere.</p>
-                </div>
-                <div>
-                  <label className="label-text">Image description (for SEO / accessibility — not shown on the page)</label>
-                  <input className="input-field" value={s.title || ''} onChange={e => updateItem('hero', i, { title: e.target.value })} placeholder="e.g. GATE 2027 registration banner" />
-                </div>
-              </ItemShell>
-            ))}
-            <AddButton label="Add Banner" onClick={() => addItem('hero', { title: '', imageUrl: '', link: '#courses' })} />
-          </SectionCard>
+          {/* HERO — a video for the School page, banner slides for everyone else */}
+          {exam.heroKind === 'video' ? (
+            <SectionCard icon={MonitorPlay} title="Hero Video" subtitle="The video that autoplays at the top of this page. Paste a YouTube playlist link (recommended) or a single YouTube video link. The 'Watch Physics on YouTube' button opens the same link.">
+              <div>
+                <label className="label-text">YouTube playlist or video link</label>
+                <input className="input-field" value={data.heroVideo || ''} onChange={e => setData(prev => ({ ...prev, heroVideo: e.target.value }))} placeholder="e.g. https://youtube.com/playlist?list=... or https://youtu.be/VIDEO_ID" />
+                <p className="text-xs text-slate-400 mt-1">A <b>playlist</b> link plays the whole list on a loop. A single <b>video</b> link plays just that video. The hero plays muted, without controls.</p>
+              </div>
+            </SectionCard>
+          ) : (
+            <SectionCard icon={MonitorPlay} title="Hero Banner Slides" subtitle="These banners are full designed images (the text and buttons are part of the picture). To change the wording or design, upload a new banner image. Set where clicking the banner should take the visitor.">
+              {data.hero.map((s, i) => (
+                <ItemShell key={i} index={i} onRemove={() => removeItem('hero', i)}>
+                  <ImageUploadField label="Banner Image" value={s.imageUrl} onChange={url => updateItem('hero', i, { imageUrl: url })} folder={storageFolder} hint="The full banner graphic. Recommended: 900 × 700 px (landscape)." previewClassName="w-28 h-20" />
+                  <div>
+                    <label className="label-text">Link — where clicking this banner goes</label>
+                    <input className="input-field" value={s.link || ''} onChange={e => updateItem('hero', i, { link: e.target.value })} placeholder="e.g. #courses  ·  /courses  ·  https://courses.gameacademy.in/..." />
+                    <p className="text-xs text-slate-400 mt-1">Use a <b>#section</b> to scroll on this page, a path like <b>/jobs</b> for another page on your site, or a full <b>https://</b> link to open elsewhere.</p>
+                  </div>
+                  <div>
+                    <label className="label-text">Image description (for SEO / accessibility — not shown on the page)</label>
+                    <input className="input-field" value={s.title || ''} onChange={e => updateItem('hero', i, { title: e.target.value })} placeholder="e.g. GATE 2027 registration banner" />
+                  </div>
+                </ItemShell>
+              ))}
+              <AddButton label="Add Banner" onClick={() => addItem('hero', { title: '', imageUrl: '', link: '#courses' })} />
+            </SectionCard>
+          )}
 
           {/* The sections below are wired only for the GATE page. */}
           {exam.hasExtras && (
@@ -432,7 +495,7 @@ export default function ExamPages() {
 
           {!exam.hasExtras && (
             <div className="admin-card text-sm text-slate-500">
-              For the <b className="text-game-teal">{exam.label}</b> page, the hero banners above are admin-editable. The rest of this page's content stays as designed — tell the developer if you want more of it opened up here.
+              For the <b className="text-game-teal">{exam.label}</b> page, the hero {exam.heroKind === 'video' ? 'video' : 'banners'} above {exam.heroKind === 'video' ? 'is' : 'are'} admin-editable. The rest of this page's content stays as designed — tell the developer if you want more of it opened up here.
             </div>
           )}
         </>
